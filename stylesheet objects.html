@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<style id="styleElement">
+body{background-color:#fff;}
+</style>
+
+</head>
+<body>
+
+<script>
+
+//logs function CSSStyleSheet() { [native code] } because this object is the stylesheet itself
+console.log(document.querySelector('#styleElement').sheet.constructor);
+
+//logs function CSSStyleRule() { [native code] } because this object is the rule inside of the style sheet
+console.log(document.querySelector('#styleElement').sheet.cssRules[0].constructor);
+
+</script>
+</body>
+</html>

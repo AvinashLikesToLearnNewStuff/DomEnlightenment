@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+//document own properties 
+console.log(Object.keys(document).sort());
+
+//document own properties and inherited properties
+var documentPropertiesInherited = [];
+for(var p in document){
+	    documentPropertiesInherited.push(p);
+}
+console.log(documentPropertiesInherited.sort());
+
+//document inherited properties only
+var documentPropertiesOnlyInherited = [];
+
+for(var p in document){
+if(
+	    !document.hasOwnProperty(p)){documentPropertiesOnlyInherited.push(p)};
+   }
+console.log(documentPropertiesOnlyInherited.sort());
+
+</script>
+</body>
+</html>

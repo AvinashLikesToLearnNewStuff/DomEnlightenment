@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<ul>
+  <li>Hi</li>
+  <li>there</li>
+</ul>
+
+<script>
+var cloneul = document.queryselector('ul').cloneNode();
+
+console.log(cloneul.constructor);//logs HTMLUListElement()
+console.log(cloneul.innerHTML);//logs (an empty string) as only the ul was 
+
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<body>
+
+<div>mouse over me</div>
+
+<script>
+
+//add a mousemove event to the window object, invoking the event during the bubbling phase
+window.addEventListener('mousemove',function(){console.log('moving over window');},false);
+
+//add a mousemove event to the document object, invoking the event during the bubbling phase
+document.addEventListener('mousemove',function(){console.log('moving over document');},false);
+
+//add a mousemove event to a <div> element object, invoking the event during the bubbling phase
+document.querySelector('div').addEventListener('mousemove',function(){console.log('moving over div');},false);
+
+</script> 
+</body>
+</html>

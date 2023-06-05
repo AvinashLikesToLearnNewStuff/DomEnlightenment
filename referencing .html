@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>click me</div>
+
+<script>
+
+document.body.addEventListener('click',function(event){
+//when the <div> is clicked logs '<div>' because the <div> was the target in the event flow
+console.log(event.target); 
+},false);
+
+</script> 
+</body>
+</html>

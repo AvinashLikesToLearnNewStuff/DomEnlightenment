@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<script>
+
+var pElementNode = document.createElement('p');
+var textNodeHi = document.createTextNode('Hi ');
+var textNodeCody = document.createTextNode('Cody');
+
+pElementNode.appendChild(textNodeHi);
+pElementNode.appendChild(textNodeCody);
+
+document.querySelector('div').appendChild(pElementNode);
+
+console.log(document.querySelector('div p').childNodes.length); //logs 2​​​​​​​​​​​​​​​​​​
+
+</script>
+</body>
+</html>

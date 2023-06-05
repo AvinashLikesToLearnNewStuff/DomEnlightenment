@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>click me</div>
+
+<script>
+var elementDiv = document.querySelector('div');
+
+// property event handler 
+elementDiv.onclick = function(){console.log('I\'m first, but I get overidden/replace')};
+
+//overrides/replaces the prior value
+elementDiv.onclick = function(){console.log('I win')};
+
+</script> 
+</body>
+</html>

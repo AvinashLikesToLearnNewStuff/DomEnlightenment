@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>click me</div>
+
+<script>
+
+//click on the <div> or the <body> the value of this remains the <body> element node
+document.body.addEventListener('click',function(){
+console.log(this); //log <body>...</body>
+},false);
+
+</script> 
+</body>
+</html>

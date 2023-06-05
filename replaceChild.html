@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div id="A">Hi</div>
+<div id="B">Dude</div>
+
+<script>
+
+//replace element node
+var divA = document.getElementById('A'); //select div A
+var newSpan = document.createElement('span'); //create a span
+newSpan.textContent = 'Howdy'; //put text in span
+divA.parentNode.replaceChild(newSpan,divA); //get the parent of div a then replace newspan with div A
+
+//replace text node
+var divB = document.getElementById('B').firstChild; //select text inside div b 
+var newText = document.createTextNode('buddy');//create text 
+divB.parentNode.replaceChild(newText, divB); // replace the divB text with new text
+
+//log the new DOM updates, 
+console.log(document.body.innerHTML);
+
+</script>
+</body>
+</html>

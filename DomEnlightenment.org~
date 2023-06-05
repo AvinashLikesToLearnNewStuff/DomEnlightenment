@@ -1,0 +1,1130 @@
+#+author: Avinash
+#+title: DomEnlightenment Notes
+#+auto_tangle:t 
+
+
+
+* Dom Enlightenment
+
+** Node overview
+*** 1.1 The Document Object model (aka the dom) is a hierarchy/tree of js node objects 
+When we write a html document, we wrap HTML content inside of other html content. 
+By doing this, we set up a hierarchy that looks like a tree
+We express this hierarchy by indenting the markup in an html document
+The browser parses the hierarchy and creates a tree like structure
+#+BEGIN_SRC html :tangle hierarchy_of_nodes.html 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>HTML</title>
+</head>
+<body>
+<!-- Add your content here-->
+</body>
+</html>
+#+END_SRC
+The code above looks like a tree when parsed 
+The purpose of the DOM is to provide a programmatic interface for scripting this live document using javascript.
+*** 1.2 Node Object Types 
+**** DOCUMENT_NODE(eg. window.document) 
+**** ELEMENT_NODE(eg. body etc tags)
+**** ATTRIBUTE_NODE(attributes of tags such as class="uwu")
+**** TEXT_NODE(strings in our documents and enter characters and white spaces)
+**** DOCUMENT_FRAGMENT_NODE(this is like a virtual dom)
+These node types help categorize and identify different parts of an HTML document when working with JavaScript or manipulating the HTML structure programmatically.
+These node types are used to store constant values that map to different objects on the dom 
+#+BEGIN_SRC html :tangle log_element_node.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+console.log(Node.ELEMENT_NODE) //logs 1, one is the numeric code value for element nodes
+
+</script>
+</body>
+</html>
+#+END_SRC
+let us log all nodes
+
+#+BEGIN_SRC html :tangle log_all_node_values.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+for(var key in Node){
+    console.log(key,' = '+Node[key]); 
+};
+
+/* the above code logs to the console the following
+ELEMENT_NODE  = 1
+ATTRIBUTE_NODE  = 2
+TEXT_NODE  = 3
+CDATA_SECTION_NODE  = 4
+ENTITY_REFERENCE_NODE  = 5
+ENTITY_NODE  = 6
+PROCESSING_INSTRUCTION_NODE  = 7
+COMMENT_NODE  = 8
+DOCUMENT_NODE  = 9
+DOCUMENT_TYPE_NODE  = 10
+DOCUMENT_FRAGMENT_NODE  = 11
+NOTATION_NODE  = 12
+DOCUMENT_POSITION_DISCONNECTED  = 1
+DOCUMENT_POSITION_PRECEDING  = 2
+DOCUMENT_POSITION_FOLLOWING  = 4
+DOCUMENT_POSITION_CONTAINS  = 8
+DOCUMENT_POSITION_CONTAINED_BY  = 16
+DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC  = 32 */
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+we need to know only 6 node types
+| interface        | node type                        |
+|------------------+----------------------------------|
+| HTML*Element     | 1(ElEMENT_NODE)                  |
+| Text             | 3(TEXT_NODE)                     |
+| Attr             | 2(ATTRIBUTE_NODE)                |
+| HTMLDocument     | 9 (i.e. DOCUMENT_NODE)           |
+| DocumentFragment | 11 (i.e. DOCUMENT_FRAGMENT_NODE) |
+| DocumentType     | 10 (i.e. DOCUMENT_TYPE_NODE)   
+*** 1.3 Sub Nodes inherit from the node object 
+Node is just a javascript constructor function which inherits from Objects.prototype just like all objects in javascript 
+all other constructor interfaces inherit from this node object 
+
+#+BEGIN_SRC html :tangle inheritance_of_node_properties.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href="#">Hi</a> <!-- this is a HTMLAnchorElement which inherits from... -->
+
+<script>
+
+//get reference to element node object
+var nodeAnchor = document.querySelector('a');
+
+//create props array to store property keys for element node object
+var props = [];
+
+//loop over element node object getting all properties & methods (inherited too)
+for(var key in nodeAnchor){
+    props.push(key);   
+}
+
+//log alphabetical list of properties & methods 
+console.table(props.sort());
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+The output shows that all nodes inherit many properties from the chain of 
+*** 1.4 properties and methods for working with nodes 
+    
+**** Node properties 
+     
+- childNodes
+- first child
+- last child
+- next sibling
+- node name
+- node type
+- node value
+- parent node
+- previous sibling 
+
+**** Node methods 
+- appendChild()
+- cloneNode()
+- compareDocumentPosition()
+- contains()
+- hasChildNodes()
+- insertBefore()
+- isEqualNode()
+- removeChild()
+- replaceChild()
+**** Document methods 
+-document.createElement()
+-document.createTextNode()
+**** Html * element properties
+-innerHtml
+-outerHtml
+-textContent
+-innerText
+-outerText
+-firstElementChild
+-lastElementChild
+-nextElementChild
+-previousElementChild
+-children
+**** html element methods
+-insertAdjacentHtml()
+*** 1.5 identifying the type and name of nodes
+Every node has a name and a type property inherited from Node
+
+#+BEGIN_SRC html :tangle names_and_types_of_some_imp_node_types.html 
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href="#">Hi</a>
+
+<script>
+console.log(document.doctype.nodeName,document.doctype.nodeType);
+console.log(document.nodeName,document.nodeType);
+console.log(document.createDocumentFragment().nodeName,document.createDocumentFragment().nodeType);
+console.log(document.querySelector('a').nodeName,document.querySelector('a').nodeType);
+console.log(document.querySelector('a').firstChild.nodeName,document.querySelector('a').firstChild.nodeType);
+
+</script>
+</body>
+</html>
+#+END_SRC
+To know what kind of an element a node is , just use the node type property 
+
+#+BEGIN_SRC html :tangle determining_a_node_type.html 
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href="#">Hi</a>
+
+<script>
+
+//is <a> a ELEMENT_NODE?
+console.log(document.querySelector('a').nodeType === 1); //logs true, <a> is an Element node
+
+//or use Node.ELEMENT_NODE which is a property containg the numerice value of 1
+console.log(document.querySelector('a').nodeType === Node.ELEMENT_NODE); //logs true, <a> is an Element node
+
+</script>
+</body> 
+</html>
+#+END_SRC
+ 
+*** 1.6 Getting a node's value  
+node value is null for most node types
+we use node value to extract text from text and comment nodes
+
+#+BEGIN_SRC html :tangle getting_a_node_value.html 
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href="#">Hi</a>
+
+<script>
+console.log(document.doctype.nodeValue);
+console.log(document.nodeValue);
+console.log(document.createDocumentFragment().nodeValue);
+
+console.log(document.querySelector('a').nodeValue);
+
+console.log(document.querySelector('a').firstChild.nodeValue);
+</script>
+</body>
+</html>
+
+#+END_SRC
+we can set a node value if we provide it liek this (document.body.firstElementChild.nodeValue = 'hi').
+ 
+*** 1.7 creating element and text nodes using Javascript methods
+The browser does create nodes for us while parsing but it is also possible to create these nodes ourselves 
+For that end, we can use these methods 
+- createElement();
+- createTextNode();
+
+#+BEGIN_SRC html :tangle creating_a_node.html 
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+var elementNode = document.createElement('div');
+console.log(elementNode, elementNode.nodeType);
+
+let textNode = document.createTextNode('Hi');
+console.log(textNode, textNode.nodeType);
+
+
+</script>
+</body>
+</html>
+#+END_SRC
+    
+- the create element creates the element we specified in the string inside, this is the same name that is the tagname poperty of the element object- the create element creates the element we specified in the string inside, this is the same name that is the tagname poperty of the element object
+- for attributes we do not use create attribute, rather we use getAttribute(), setAttribute() and removeAttribute() etc  
+
+*** 1.8 creating and adding element and text nodes using JavaScript strings 
+  The innerHTML, outerHTML, textContent, and insertAdjacentHtml() properties and methods provide the functionality to create and add nodes to the dom using javascript
+let us see an example
+
+#+BEGIN_SRC html :tangle creating_elements_using_js_strings.html 
+ <!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div id="A"></div>
+<span id="B"></span>
+<div id="C"></div>
+<div id="D"></div>
+<div id="E"></div>
+
+<script> 
+//create a strong element and text node and add to html
+document.getElementById('A').innerHTML = '<strong>Hi</strong>';
+
+//create a div element and text node to replace <span id="B"></div> (notice span#B is replaced)
+document.getElementById('B').outerHTML = '<div id = "B" class = "new" > Whats shaking <div>'
+
+//create a text node and update the div#C with the text node
+document.getElementById('C').textContent = 'dude';
+
+//NON standard extensions below i.e. innerText & outerText
+
+//create a text node and update the div#D with the text node
+document.getElementById('D').innerText = 'keep it';
+
+//create a text node and replace the div#E with the text node (notice div#E is gone)
+document.getElementById('E').outerText = 'real!';
+
+console.log(document.body.innerHTML);
+/* logs
+<div id="A"><strong>Hi</strong></div>
+<div id="B" class="new">Whats Shaking</div>
+<span id="C">dude</span>
+<div id="D">Keep it</div>
+real!
+*/
+
+</script>
+</body>
+</html>
+#+END_SRC
+so basically inner html is used to get everything inside the element tags, if is is used without the assignment operator
+if we use innerhtml = 'something' it acts as a setter - think of it as the select/change inside paranthesis function of vim
+
+outerhtml is used to get the element and everything inside it - think of it as the select/change around paranthesis function of vim
+
+textContent - only deals with the text inside the elements, excludint the tags
+
+In summary, innerHTML and outerHTML deal with the HTML content of elements, allowing you to manipulate the structure and content, while textContent deals with plain text content and ignores any HTML tags.
+
+#+BEGIN_SRC html :tangle inserting_adjacently.html 
+<!DOCTYPE html>
+<html lang="en">
+<body><i id="elm">how</i>
+
+<script>
+
+var elm = document.getElementById('elm');
+
+elm.insertAdjacentHTML('beforebegin', '<span>Hey-</span>');
+elm.insertAdjacentHTML('afterbegin', '<span>dude-</span>'); 
+elm.insertAdjacentHTML('beforeend', '<span>-are</span>'); 
+elm.insertAdjacentHTML('afterend', '<span>-you?</span>');  
+
+console.log(document.body.innerHTML);
+/* logs
+<span>Hey-</span><i id="A"><span>dude-</span>how<span>-are</span></i><span>-you?</span>
+*/
+
+</script>
+</body>
+</html>
+#+End_src
+The insertAdjacentHTML() method is a convenient way to insert HTML content at a specified position relative to an element. It allows us to dynamically add or insert new HTML content into an existing element without replacing its entire content.
+
+The insertAdjacentHTML() method accepts two arguments:
+
+The first argument specifies the position where the new HTML content should be inserted. It can be one of the following values:
+
+"beforebegin": Inserts the HTML content as a sibling immediately before the element.
+"afterbegin": Inserts the HTML content as the first child of the element.
+"beforeend": Inserts the HTML content as the last child of the element.
+"afterend": Inserts the HTML content as a sibling immediately after the element.
+
+The second argument is a string that contains the HTML content to be inserted at the specified position.
+
+*** 1.9 extracting dom tree as JavaScript strings
+- this is using innerHTML, outerHTML and textContent as getters 
+
+#+BEGIN_SRC html :tangle extracting_Dom_text_as_javascript_strings.html 
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div id="A"><i>Hi</i></div>
+<div id="B">Dude<strong> !</strong></div>
+
+<script>
+
+console.log(document.getElementById('A').innerHTML); //logs '<i>Hi</i>'
+
+console.log(document.getElementById('A').outerHTML); //logs <div id="A">Hi</div>
+
+//notice that all text is returned even if its in child element nodes (i.e. <strong> !</strong>) 
+console.log(document.getElementById('B').textContent); //logs 'Dude !'
+
+//NON standard extensions below i.e. innerText & outerText
+
+console.log(document.getElementById('B').innerText); //logs 'Dude !'
+
+console.log(document.getElementById('B').outerText); //logs 'Dude !'​​
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+To get all the text nodes in the body, use document.body.textContent
+
+*** 1.10 adding node objects using appendChild()  & insertBefore();
+- appendChild() and insertBefore() allow us to insert objects into the dom tree
+- we will insert an element node (<strong>) and textNode (Dude!), then p is selected in dom and strong is appended using appendChild
+#+BEGIN_SRC html :tangle appendChild().html 
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<p>Hi</p>
+
+<script>
+
+//create a blink element node and text node
+var elementNode = document.createElement('strong');
+var textNode = document.createTextNode(' Dude');
+
+
+//append these nodes to the DOM
+document.querySelector('p').appendChild(elementNode);
+document.querySelector('p').appendChild(elementNode);
+
+//log's <p>Hi<strong> Dude</strong></p>
+console.log(document.body.innerHTML);
+
+
+</script>
+</body>
+</html>
+#+END_SRC    
+- we use insertBefore() to control the place where we want to insert things to 
+- let us say we want to insert the list item before the unordered listed
+
+#+BEGIN_SRC html :tangle insertBefore().html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<ul>
+    <li>2</li>
+    <li>3</li>
+</ul>
+
+<script>
+
+//create a text node and li element node and append the text to the li
+var text1 = document.createTextNode('1');
+var li = document.createElement('li');
+li.appendChild(text1);
+
+//select the ul in the document
+var ul = document.querySelector('ul');
+
+/* 
+add the li element we created above to the DOM, notice I call on <ul> and pass reference to <li>2</li> using ul.firstChild 
+*/
+ul.insertBefore(li,ul.firstChild);
+
+console.log(document.body.innerHTML);
+
+/*logs
+<ul>
+<li>1</li>
+<li>2</li>
+<li>3</li>
+</ul>
+*/
+
+</script>
+</body>
+</html>
+#+END_SRC
+the insertBefore requires two parameters, the node to be inserted and the reference node in the document you would like the node inserted before
+
+*** 1.11 removing and replacing nodes using removeChild and replaceChild
+It is a multi step Process
+- select the node you want to remove
+- gain access to its parent uisng the parent node property 
+- invoke the removeChild method on the parent node and give it the reference of the node u want to be removed
+demo
+#+BEGIN_SRC html :tangle removeChild().html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div id="A">Hi</div>
+<div id="B">Dude</div>
+
+<script>
+
+//remove element node
+var divA = document.getElementById('A');
+divA.parentNode.removeChild(divA);
+
+//remove text node
+var divB = document.getElementById('B').firstChild;
+divB.parentNode.removeChild(divB);
+
+//log the new DOM updates, which should only show the remaining empty div#B
+console.log(document.body.innerHTML);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+replaceChild works in the same way
+
+
+#+BEGIN_SRC html :tangle replaceChild.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div id="A">Hi</div>
+<div id="B">Dude</div>
+
+<script>
+
+//replace element node
+var divA = document.getElementById('A'); //select div A
+var newSpan = document.createElement('span'); //create a span
+newSpan.textContent = 'Howdy'; //put text in span
+divA.parentNode.replaceChild(newSpan,divA); //get the parent of div a then replace newspan with div A
+
+//replace text node
+var divB = document.getElementById('B').firstChild; //select text inside div b 
+var newText = document.createTextNode('buddy');//create text 
+divB.parentNode.replaceChild(newText, divB); // replace the divB text with new text
+
+//log the new DOM updates, 
+console.log(document.body.innerHTML);
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+
+*** 1.12 cloning nodes using CloneNode
+- use this to duplicate nodes
+#+BEGIN_SRC html :tangle cloneNode().html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<ul>
+  <li>Hi</li>
+  <li>there</li>
+</ul>
+
+<script>
+var cloneul = document.queryselector('ul').cloneNode();
+
+console.log(cloneul.constructor);//logs HTMLUListElement()
+console.log(cloneul.innerHTML);//logs (an empty string) as only the ul was 
+
+</script>
+</body>
+</html>
+#+END_SRC
+When cloning an Element node all attributes and values are also cloned. In fact, only attributes are copied! Everything else you can add (e.g. event handlers) to a DOM node is lost when cloning.
+- it may lead to duplicate document ids in a document
+  
+*** 1.13 grokking node collections - (nodelist and htmlcollection)
+When selecting a group of nodes in a tree - we get the results in two forms 1) nodeList and 2) HTMLCOLLECTION (eg document.scripts)
+These are array like - are not really arrays tho 
+- they can be live or static 
+- by default they are sorted in the collection tree order
+- the collections have length property which reflects the numbers of elements in the list 
+
+*** 1.14 getting a list of child/all the immediate child nodes
+we can get an arraylike  list called nodelist using the childNodes property
+#+BEGIN_SRC html :tangle listing_childNodes().html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<ul>
+  <li>Hi</li>
+  <li>there</li>
+</ul>
+
+<script>
+var ulElementChildNodes = document.querySelector('ul').childNodes;
+console.log(ulElementChildNodes);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 1.15 converting child nodes into Htmlcollection to JavaScript Array
+we can cofirm that node lists are not arrays using isArray() method 
+- Nodelists and Htmlcollections are live lists
+- convering them to JS arrays gives access to methods provided by the Array object like forEach, pop, map, reduce etc
+To convert an array like list to a true JavaScript array pass the array-like list to call() or apply(), in which the call() or apply() is calling a method that returns an un-altered true JavaScript array. In the code below I use the .slice() method, which doesn't really slice anything I am just using it to convert the list to a JavaScript Array due to the fact the slice() returns an array.
+#+BEGIN_SRC html :tangle convert_NodeList_to_array.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href="#"></a>
+
+<script>
+
+console.log(Array.isArray(Array.prototype.slice.call(document.links))); //returns true
+console.log(Array.isArray(Array.prototype.slice.call(document.querySelectorAll('a')))); //returns true
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+
+u can also use Array.from method to convert it 
+
+*** 1.16 traversing nodes in DOM
+    From a referecne of a node like document.querySelector('ul'), it is possible to traverse to or get a referecne to another node by using the following properties 
+- parentNode
+- firstChild
+- lastChild
+- nextSibling
+- previousSibling
+  
+#+BEGIN_SRC html :tangle traversing_nodes_in_dom.html
+<!DOCTYPE html>
+<html lang="en">
+<body><ul><!-- comment -->
+<li id="A"></li>
+<li id="B"></li>
+<!-- comment -->
+</ul>
+
+<script>
+
+//cache selection of the ul
+var ul = document.querySelector('ul');
+
+//What is the parentNode of the ul?
+console.log(ul.parentNode.nodeName);
+
+//What is the first child of the ul?
+console.log(ul.firstChild.nodeName);
+
+//What is the last child of the ul?
+console.log(ul.lastChild.nodeName);
+
+//What is the nextSibling of the first li?
+console.log(ul.querySelector('#A').nextSibling.nodeName);
+
+//What is the previousSibling of the last li?
+console.log(ul.querySelector('#A').previousSibling.nodeName);
+
+</script>
+</body>
+</html>
+#+END_SRC
+The properties above also include text and comment nodes meaning that if we want to traverse them, we need to traverse both the text and comment nodes also but if we want to make traversing easier and escape the text and comment nodes, we can just use the properties below to directly traverse element nodes etc
+- firstElementChild
+- lastElementChild
+- nextElementChild
+- previousElementChild
+- children
+we can also get the number of child elements using childElementCount
+#+BEGIN_SRC html :tangle taversing_elements.html
+
+<!DOCTYPE html>
+<html lang="en">
+<body><ul><!-- comment -->
+<li id="A"></li>
+<li id="B"></li>
+<!-- comment -->
+</ul>
+
+<script>
+
+//cache selection of the ul
+var ul = document.querySelector('ul');
+
+//what is the first child of ul
+console.log(ul.firstElementChild.nodeName);
+
+//What is the  last child of ul
+console.log(ul.lastElementChild.nodeName);
+
+//What is the previous of the last li?
+console.log(ul.querySelector('#A').nextElementSibling.nodeName);
+
+//What is the previousSibling of the last li?
+console.log(ul.querySelector('#B').previousElementSibling.nodeName);
+
+//what are the element only child nodes of ul?
+console.log(ul.children);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 1.17 verify a node poistion in the dom tree with contains() and compareDocumentPosition();
+   if we want to know that a node is contained inside of another, we  can use the contains() method . an example
+  
+#+BEGIN_SRC html :tangle contains().html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<script>
+
+// is <body> inside <html lang="en"> ?
+var inside = document.querySelector('html').contains(document.querySelector('body'));
+
+console.log(inside); //logs true
+
+</script>
+</body>
+</html>
+#+END_SRC
+contains() will return true if the node selected and the node passed in are identical
+
+compareDocumentPosition gives u numbers showing relative positions of that node wrt to the selected node in the html document
+
+*** 1.18 how to determine if two nodes are identical
+two nodes are equal only if 
+1- nodeName, localName, namespaceURI, prefix, nodeValue are equal
+2- attributes NamedNodeMaps are equal. 
+3- childNodes NodeLists are equal.
+
+we can verify this using .isEqualNode() method on a dom 
+
+#+BEGIN_SRC html :tangle isEqualNode().html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<input type="text">
+<input type="text">
+
+<textarea>foo</textarea>
+<textarea>bar</textarea>
+
+<script>
+
+//logs true, because they are exactly idential
+var input = document.querySelector('input');
+console.log(input[0].isEqualNode(input[1]));
+
+//logs false, because the child text node is not the same
+var textArea = document.querySelector('textarea');
+console.log(textarea[0].isEqualNode(textarea[1]));
+
+</script>
+</body>
+</html>
+#+END_SRC
+If you don't care about two nodes being exactly equal but instead want to know if two node references refer to the same node you can simply check it using the === opertor (i.e. document.body === document.body). This will tell us if they are identical but no equal.
+
+** Document Nodes
+
+*** 2.1 document node overview
+The HTMLDocument constructor (which inherits from document) when instantiated represents specifically a DOCUMENT_NODE (i.e. window.document) in the DOM.  
+to verify if this is just ask which constructor was used in the following way 
+#+BEGIN_SRC html :tangle document_node_overview.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+console.log(window.document.constructor); //logs function HTMLDocument() { [native code] }
+console.log(window.document.nodeType); //logs 9, which is a numeric key mapping to DOCUMENT_NODE
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 2.2 html document properties and methods
+To get the properties and methods of the html documents let us use the code below
+#+BEGIN_SRC html :tangle listing_all_document_properties.html
+  <!DOCTYPE html>
+  <html lang="en">
+  <body>
+  <script>
+  //document own properties 
+  console.log(Object.keys(document).sort());
+
+  //document own properties and inherited properties
+  var documentPropertiesInherited = [];
+  for(var p in document){
+	      documentPropertiesInherited.push(p);
+  }
+  console.log(documentPropertiesInherited.sort());
+
+  //document inherited properties only
+  var documentPropertiesOnlyInherited = [];
+
+  for(var p in document){
+  if(
+	      !document.hasOwnProperty(p)){documentPropertiesOnlyInherited.push(p)};
+     }
+  console.log(documentPropertiesOnlyInherited.sort());
+
+  </script>
+  </body>
+  </html>
+#+END_SRC
+some noteworthy properties are
+1- doctype
+2- documentElement
+3- implementation
+4- activeElement
+5- body
+6- head
+7- title
+8- lastModified
+9- referrer 
+10- URL 
+11- defaultview
+12- compatMode
+13- ownerDocument
+14- hasFocus();
+
+*** 2.3 Getting general HTML document information (title, url, referrer, lastModified, compatMode)
+the document object contains some general info about dom 
+we can get them like this
+#+BEGIN_SRC html :tangle general_info.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+var d = document;
+console.log('title = ' +d.title);
+console.log('url = ' +d.URL);
+console.log('referrer = ' +d.referrer);
+console.log('lastModified = ' +d.lastModified);
+
+//logs either BackCompat (Quirks Mode) or CSS1Compat (Strict Mode)
+console.log('compatibility mode = ' +d.compatMode);
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+
+*** 2.4 document child nodes
+Document nodes can contain one Document type node object and one Element type node object. these refer to <!DOCTYPE html> and  <html lang="en">
+so if we ask for children of document, we will get these two things at least
+#+BEGIN_SRC html :tangle document_child_nodes.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+//This is the doctype/DTD
+console.log(document.childNodes[0].nodeType); //logs 10, which is a numeric key mapping to DOCUMENT_TYPE_NODE
+
+//This is the <html> element
+console.log(document.childNodes[1].nodeType); //logs 1, which is a numeric key mapping to ELEMENT_TYPE_NODE
+
+</script>
+</body>
+</html>
+#+END_SRC  
+
+*** 2.5 document provides shortcuts to <!DOCTYPE>, <html lang="en">, <head>, and <body> 
+    
+document.doctype refers to <!DOCTYPE> 
+document.documentElement refers to <html lang="en">
+document.head refers to <head>
+document.body refers to <body>
+
+#+BEGIN_SRC html :tangle document_child_nodes.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+console.log(document.doctype); // logs DocumentType {nodeType=10, ownerDocument=document, ...}
+
+console.log(document.documentElement); // logs <html lang="en">
+
+console.log(document.head); // logs <head>
+
+console.log(document.body); // logs <body>
+
+</script>
+
+</body>
+</html>
+#+END_SRC
+*** 2.6 Detecting DOM specifications/features using document.implementation.hasFeature()
+
+    we can ask if a particular feature is supported in the browser using hasFeature method.
+
+#+BEGIN_SRC html :tangle has_feature_method.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+console.log(document.implementation.hasFeature('Core','2.0'));
+console.log(document.implementation.hasFeature('Core','3.0')); </script>
+
+</body>
+</html>
+#+END_SRC
+
+*** 2.7 Get a reference to the focus/active node in the document
+
+using document.activeElement we can get a reference to a node in the document that is focused/active. 
+in the code below we set the focus to text area then get a reference to it using the activeElement property
+#+BEGIN_SRC html :tangle has_feature_method.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+document.querySelector('textarea').focus();
+console.log(document.activeElement);
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 2.8 Determing if the document or any node inside of the document has focus
+if we want to know if any node inside the document has focus we can use this 
+#+BEGIN_SRC html :tangle reference_to_any_element_focused_in_the_document.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<script>
+
+//If you keep focus on the window/tab that has the document loaded its true. If not it's false.
+setTimeout(function(){console.log(document.hasFocus())},5000);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+
+
+
+
+
+*** 2.9 document.defaultview is a shortcut to the head/global object
+
+    to select our current window we can use this
+
+#+BEGIN_SRC html :tangle reference_to_any_element_focused_in_the_document.html
+ <!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+console.log(document.defaultView) //reference, head JS object. Would be window object in a browser.
+
+</script>
+</body>
+</html>   
+#+END_SRC
+
+*** 2.10 Getting a reference to the Document from an element using ownerDocument
+
+we can also use ownerDocument to get a reference to the node the document is contained within
+#+BEGIN_SRC html :tangle ownerDocument.html
+ <!DOCTYPE html>
+<html lang="en">
+<body>
+
+<iframe src="http://someFileServedFromServerOnSameDomain.html"></iframe>
+
+<script>
+
+//get the window.document that the <body> is contained within
+console.log(document.body.ownerElement);
+
+//get the window.document the <body> inside of the iframe is contained within
+console.log(window.frames[0].document.body.ownerElement);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+
+** Element Nodes
+   
+*** 3.1 HTML*Element object overview
+    all html objects have a unique js constructor that instantiates them as a node object in the dom tree
+   example an a element is created from HTMLAnchorElement 
+**** there are many constructors - list (don't worry too much about remembering the list, just look it up once)
+
+- HTMLHtmlElement
+- HTMLHeadElement
+- HTMLLinkElement
+- HTMLTitleElement
+- HTMLMetaElement
+- HTMLBaseElement
+- HTMLIsIndexElement
+- HTMLStyleElement
+- HTMLBodyElement
+- HTMLFormElement
+- HTMLSelectElement
+- HTMLOptGroupElement
+- HTMLOptionElement
+- HTMLInputElement
+- HTMLTextAreaElement
+- HTMLButtonElement
+- HTMLLabelElement
+- HTMLFieldSetElement
+- HTMLLegendElement
+- HTMLUListElement
+- HTMLOListElement
+- HTMLDListElement
+- HTMLDirectoryElement
+- HTMLMenuElement
+- HTMLLIElement
+- HTMLDivElement
+- HTMLParagraphElement
+- HTMLHeadingElement
+- HTMLQuoteElement
+- HTMLPreElement
+- HTMLBRElement
+- HTMLBaseFontElement
+- HTMLFontElement
+- HTMLHRElement
+- HTMLModElement
+- HTMLAnchorElement
+- HTMLImageElement
+- HTMLObjectElement
+- HTMLParamElement
+- HTMLAppletElement
+- HTMLMapElement
+- HTMLAreaElement
+- HTMLScriptElement
+- HTMLTableElement
+- HTMLTableCaptionElement
+- HTMLTableColElement
+- HTMLTableSectionElement
+- HTMLTableRowElement
+- HTMLTableCellElement
+- HTMLFrameSetElement
+- HTMLFrameElement
+- HTMLIFrameElement
+
+*** COMMENT 3.2 HTML*Element object properties and methods (including inherited)
+    we can simply see what properties these elements have by the following code 
+    
+#+BEGIN_SRC html :tangle inherited_properties_in_elements.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href="#">Hi</a>
+
+<script>
+
+var anchor = document.querySelector('a');
+
+//element own properties
+console.log(Object.keys(anchor).sort());
+
+//element own properties & inherited properties
+var documentPropertiesIncludeInherited = [];
+for(var p in document){
+	documentPropertiesIncludeInherited.push(p);
+}
+console.log(documentPropertiesIncludeInherited.sort());
+
+//element inherited properties only
+var documentPropertiesOnlyInherited = [];
+for(var p in document){
+	if(!document.hasOwnProperty(p)){
+		documentPropertiesOnlyInherited.push(p);
+	}
+}
+console.log(documentPropertiesOnlyInherited.sort());
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+**** some good properties to take a note of are follows
+>> createElement()
+>> tagName
+>> children
+>> getAttribute()
+>> setAttribute()
+>> hasAttribute()
+>> removeAttribute()
+>> classList()
+>> dataset
+>> attributes
+
+*** 3.3 Creating Elements
+    element nodes are created when a browser gets a interrupt html document and a corresponding dom is built on the contents of the douemnt
+after this we can also create nodes on our own using createElement()
+
+#+BEGIN_SRC html :tangle test.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+var elementNode = document.createElement('textarea');
+document.body.appendChild(elementNode);
+
+console.log(document.querySelector('textarea'));
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 3.4 Get the tag name of an element
+
+*** 3.5 Getting a list/collection of element attributes and values
+
+*** 3.6 Getting, Setting, & Removing an element's attribute value
+
+*** 3.7 Verifying an element has a specific attribute
+
+*** 3.8 Getting a list of class attribute values
+
+
+*** 3.9 Adding & removing sub-values to a class attribute
+
+*** 3.10 Toggling a class attribute value
+
+*** 3.11 Determining if a class attribute value contains a specific value
+
+*** 3.12 Getting & Setting data-* attribute
+** Element Node Selecting
+** Element Node Geometry and Scrolling Geometry
+** Element Node inline styles
+** Text Nodes
+** Document Fragment Nodes
+** CSS stylesheet and css rules
+** Javascript in the dom 
+** Dom events
+** Creating dom.js a wishful Jquery inspired Dom Library for mordern browserslement
+

@@ -1,0 +1,3577 @@
+#+author: Avinash
+#+title: DomEnlightenment Notes
+
+
+
+* Dom Enlightenment
+  The url of the Page is https://domenlightenment.com/
+
+** Node overview
+*** 1.1 The Document Object model (aka the dom) is a hierarchy/tree of js node objects 
+When we write a html document, we wrap HTML content inside of other html content. 
+By doing this, we set up a hierarchy that looks like a tree
+We express this hierarchy by indenting the markup in an html document
+The browser parses the hierarchy and creates a tree like structure
+#+BEGIN_SRC html :tangle hierarchy_of_nodes.html 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>HTML</title>
+</head>
+<body>
+<!-- Add your content here-->
+</body>
+</html>
+#+END_SRC
+The code above looks like a tree when parsed 
+The purpose of the DOM is to provide a programmatic interface for scripting this live document using javascript.
+*** 1.2 Node Object Types 
+**** DOCUMENT_NODE(eg. window.document) 
+**** ELEMENT_NODE(eg. body etc tags)
+**** ATTRIBUTE_NODE(attributes of tags such as class="uwu")
+**** TEXT_NODE(strings in our documents and enter characters and white spaces)
+**** DOCUMENT_FRAGMENT_NODE(this is like a virtual dom)
+These node types help categorize and identify different parts of an HTML document when working with JavaScript or manipulating the HTML structure programmatically.
+These node types are used to store constant values that map to different objects on the dom 
+#+BEGIN_SRC html :tangle log_element_node.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+console.log(Node.ELEMENT_NODE) //logs 1, one is the numeric code value for element nodes
+
+</script>
+</body>
+</html>
+#+END_SRC
+let us log all nodes
+
+#+BEGIN_SRC html :tangle log_all_node_values.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+for(var key in Node){
+    console.log(key,' = '+Node[key]); 
+};
+
+/* the above code logs to the console the following
+ELEMENT_NODE  = 1
+ATTRIBUTE_NODE  = 2
+TEXT_NODE  = 3
+CDATA_SECTION_NODE  = 4
+ENTITY_REFERENCE_NODE  = 5
+ENTITY_NODE  = 6
+PROCESSING_INSTRUCTION_NODE  = 7
+COMMENT_NODE  = 8
+DOCUMENT_NODE  = 9
+DOCUMENT_TYPE_NODE  = 10
+DOCUMENT_FRAGMENT_NODE  = 11
+NOTATION_NODE  = 12
+DOCUMENT_POSITION_DISCONNECTED  = 1
+DOCUMENT_POSITION_PRECEDING  = 2
+DOCUMENT_POSITION_FOLLOWING  = 4
+DOCUMENT_POSITION_CONTAINS  = 8
+DOCUMENT_POSITION_CONTAINED_BY  = 16
+DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC  = 32 */
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+we need to know only 6 node types
+| interface        | node type                        |
+|------------------+----------------------------------|
+| HTML*Element     | 1(ElEMENT_NODE)                  |
+| Text             | 3(TEXT_NODE)                     |
+| Attr             | 2(ATTRIBUTE_NODE)                |
+| HTMLDocument     | 9 (i.e. DOCUMENT_NODE)           |
+| DocumentFragment | 11 (i.e. DOCUMENT_FRAGMENT_NODE) |
+| DocumentType     | 10 (i.e. DOCUMENT_TYPE_NODE)   
+*** 1.3 Sub Nodes inherit from the node object 
+Node is just a javascript constructor function which inherits from Objects.prototype just like all objects in javascript 
+all other constructor interfaces inherit from this node object 
+
+#+BEGIN_SRC html :tangle inheritance_of_node_properties.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href="#">Hi</a> <!-- this is a HTMLAnchorElement which inherits from... -->
+
+<script>
+
+//get reference to element node object
+var nodeAnchor = document.querySelector('a');
+
+//create props array to store property keys for element node object
+var props = [];
+
+//loop over element node object getting all properties & methods (inherited too)
+for(var key in nodeAnchor){
+    props.push(key);   
+}
+
+//log alphabetical list of properties & methods 
+console.table(props.sort());
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+The output shows that all nodes inherit many properties from the chain of 
+*** 1.4 properties and methods for working with nodes 
+    
+**** Node properties 
+     
+- childNodes
+- first child
+- last child
+- next sibling
+- node name
+- node type
+- node value
+- parent node
+- previous sibling 
+
+**** Node methods 
+- appendChild()
+- cloneNode()
+- compareDocumentPosition()
+- contains()
+- hasChildNodes()
+- insertBefore()
+- isEqualNode()
+- removeChild()
+- replaceChild()
+**** Document methods 
+-document.createElement()
+-document.createTextNode()
+**** Html * element properties
+-innerHtml
+-outerHtml
+-textContent
+-innerText
+-outerText
+-firstElementChild
+-lastElementChild
+-nextElementChild
+-previousElementChild
+-children
+**** html element methods
+-insertAdjacentHtml()
+*** 1.5 identifying the type and name of nodes
+Every node has a name and a type property inherited from Node
+
+#+BEGIN_SRC html :tangle names_and_types_of_some_imp_node_types.html 
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href="#">Hi</a>
+
+<script>
+console.log(document.doctype.nodeName,document.doctype.nodeType);
+console.log(document.nodeName,document.nodeType);
+console.log(document.createDocumentFragment().nodeName,document.createDocumentFragment().nodeType);
+console.log(document.querySelector('a').nodeName,document.querySelector('a').nodeType);
+console.log(document.querySelector('a').firstChild.nodeName,document.querySelector('a').firstChild.nodeType);
+
+</script>
+</body>
+</html>
+#+END_SRC
+To know what kind of an element a node is , just use the node type property 
+
+#+BEGIN_SRC html :tangle determining_a_node_type.html 
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href="#">Hi</a>
+
+<script>
+
+//is <a> a ELEMENT_NODE?
+console.log(document.querySelector('a').nodeType === 1); //logs true, <a> is an Element node
+
+//or use Node.ELEMENT_NODE which is a property containg the numerice value of 1
+console.log(document.querySelector('a').nodeType === Node.ELEMENT_NODE); //logs true, <a> is an Element node
+
+</script>
+</body> 
+</html>
+#+END_SRC
+ 
+*** 1.6 Getting a node's value  
+node value is null for most node types
+we use node value to extract text from text and comment nodes
+
+#+BEGIN_SRC html :tangle getting_a_node_value.html 
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href="#">Hi</a>
+
+<script>
+console.log(document.doctype.nodeValue);
+console.log(document.nodeValue);
+console.log(document.createDocumentFragment().nodeValue);
+
+console.log(document.querySelector('a').nodeValue);
+
+console.log(document.querySelector('a').firstChild.nodeValue);
+</script>
+</body>
+</html>
+
+#+END_SRC
+we can set a node value if we provide it liek this (document.body.firstElementChild.nodeValue = 'hi').
+ 
+*** 1.7 creating element and text nodes using Javascript methods
+The browser does create nodes for us while parsing but it is also possible to create these nodes ourselves 
+For that end, we can use these methods 
+- createElement();
+- createTextNode();
+
+#+BEGIN_SRC html :tangle creating_a_node.html 
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+var elementNode = document.createElement('div');
+console.log(elementNode, elementNode.nodeType);
+
+let textNode = document.createTextNode('Hi');
+console.log(textNode, textNode.nodeType);
+
+
+</script>
+</body>
+</html>
+#+END_SRC
+    
+- the create element creates the element we specified in the string inside, this is the same name that is the tagname poperty of the element object- the create element creates the element we specified in the string inside, this is the same name that is the tagname poperty of the element object
+- for attributes we do not use create attribute, rather we use getAttribute(), setAttribute() and removeAttribute() etc  
+
+*** 1.8 creating and adding element and text nodes using JavaScript strings 
+  The innerHTML, outerHTML, textContent, and insertAdjacentHtml() properties and methods provide the functionality to create and add nodes to the dom using javascript
+let us see an example
+
+#+BEGIN_SRC html :tangle creating_elements_using_js_strings.html 
+ <!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div id="A"></div>
+<span id="B"></span>
+<div id="C"></div>
+<div id="D"></div>
+<div id="E"></div>
+
+<script> 
+//create a strong element and text node and add to html
+document.getElementById('A').innerHTML = '<strong>Hi</strong>';
+
+//create a div element and text node to replace <span id="B"></div> (notice span#B is replaced)
+document.getElementById('B').outerHTML = '<div id = "B" class = "new" > Whats shaking <div>'
+
+//create a text node and update the div#C with the text node
+document.getElementById('C').textContent = 'dude';
+
+//NON standard extensions below i.e. innerText & outerText
+
+//create a text node and update the div#D with the text node
+document.getElementById('D').innerText = 'keep it';
+
+//create a text node and replace the div#E with the text node (notice div#E is gone)
+document.getElementById('E').outerText = 'real!';
+
+console.log(document.body.innerHTML);
+/* logs
+<div id="A"><strong>Hi</strong></div>
+<div id="B" class="new">Whats Shaking</div>
+<span id="C">dude</span>
+<div id="D">Keep it</div>
+real!
+*/
+
+</script>
+</body>
+</html>
+#+END_SRC
+so basically inner html is used to get everything inside the element tags, if is is used without the assignment operator
+if we use innerhtml = 'something' it acts as a setter - think of it as the select/change inside paranthesis function of vim
+
+outerhtml is used to get the element and everything inside it - think of it as the select/change around paranthesis function of vim
+
+textContent - only deals with the text inside the elements, excludint the tags
+
+In summary, innerHTML and outerHTML deal with the HTML content of elements, allowing you to manipulate the structure and content, while textContent deals with plain text content and ignores any HTML tags.
+
+#+BEGIN_SRC html :tangle inserting_adjacently.html 
+<!DOCTYPE html>
+<html lang="en">
+<body><i id="elm">how</i>
+
+<script>
+
+var elm = document.getElementById('elm');
+
+elm.insertAdjacentHTML('beforebegin', '<span>Hey-</span>');
+elm.insertAdjacentHTML('afterbegin', '<span>dude-</span>'); 
+elm.insertAdjacentHTML('beforeend', '<span>-are</span>'); 
+elm.insertAdjacentHTML('afterend', '<span>-you?</span>');  
+
+console.log(document.body.innerHTML);
+/* logs
+<span>Hey-</span><i id="A"><span>dude-</span>how<span>-are</span></i><span>-you?</span>
+*/
+
+</script>
+</body>
+</html>
+#+End_src
+The insertAdjacentHTML() method is a convenient way to insert HTML content at a specified position relative to an element. It allows us to dynamically add or insert new HTML content into an existing element without replacing its entire content.
+
+The insertAdjacentHTML() method accepts two arguments:
+
+The first argument specifies the position where the new HTML content should be inserted. It can be one of the following values:
+
+"beforebegin": Inserts the HTML content as a sibling immediately before the element.
+"afterbegin": Inserts the HTML content as the first child of the element.
+"beforeend": Inserts the HTML content as the last child of the element.
+"afterend": Inserts the HTML content as a sibling immediately after the element.
+
+The second argument is a string that contains the HTML content to be inserted at the specified position.
+
+*** 1.9 extracting dom tree as JavaScript strings
+- this is using innerHTML, outerHTML and textContent as getters 
+
+#+BEGIN_SRC html :tangle extracting_Dom_text_as_javascript_strings.html 
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div id="A"><i>Hi</i></div>
+<div id="B">Dude<strong> !</strong></div>
+
+<script>
+
+console.log(document.getElementById('A').innerHTML); //logs '<i>Hi</i>'
+
+console.log(document.getElementById('A').outerHTML); //logs <div id="A">Hi</div>
+
+//notice that all text is returned even if its in child element nodes (i.e. <strong> !</strong>) 
+console.log(document.getElementById('B').textContent); //logs 'Dude !'
+
+//NON standard extensions below i.e. innerText & outerText
+
+console.log(document.getElementById('B').innerText); //logs 'Dude !'
+
+console.log(document.getElementById('B').outerText); //logs 'Dude !'​​
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+To get all the text nodes in the body, use document.body.textContent
+
+*** 1.10 adding node objects using appendChild()  & insertBefore();
+- appendChild() and insertBefore() allow us to insert objects into the dom tree
+- we will insert an element node (<strong>) and textNode (Dude!), then p is selected in dom and strong is appended using appendChild
+#+BEGIN_SRC html :tangle appendChild().html 
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<p>Hi</p>
+
+<script>
+
+//create a blink element node and text node
+var elementNode = document.createElement('strong');
+var textNode = document.createTextNode(' Dude');
+
+
+//append these nodes to the DOM
+document.querySelector('p').appendChild(elementNode);
+document.querySelector('p').appendChild(elementNode);
+
+//log's <p>Hi<strong> Dude</strong></p>
+console.log(document.body.innerHTML);
+
+
+</script>
+</body>
+</html>
+#+END_SRC    
+- we use insertBefore() to control the place where we want to insert things to 
+- let us say we want to insert the list item before the unordered listed
+
+#+BEGIN_SRC html :tangle insertBefore().html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<ul>
+    <li>2</li>
+    <li>3</li>
+</ul>
+
+<script>
+
+//create a text node and li element node and append the text to the li
+var text1 = document.createTextNode('1');
+var li = document.createElement('li');
+li.appendChild(text1);
+
+//select the ul in the document
+var ul = document.querySelector('ul');
+
+/* 
+add the li element we created above to the DOM, notice I call on <ul> and pass reference to <li>2</li> using ul.firstChild 
+*/
+ul.insertBefore(li,ul.firstChild);
+
+console.log(document.body.innerHTML);
+
+/*logs
+<ul>
+<li>1</li>
+<li>2</li>
+<li>3</li>
+</ul>
+*/
+
+</script>
+</body>
+</html>
+#+END_SRC
+the insertBefore requires two parameters, the node to be inserted and the reference node in the document you would like the node inserted before
+
+*** 1.11 removing and replacing nodes using removeChild and replaceChild
+It is a multi step Process
+- select the node you want to remove
+- gain access to its parent uisng the parent node property 
+- invoke the removeChild method on the parent node and give it the reference of the node u want to be removed
+demo
+#+BEGIN_SRC html :tangle removeChild().html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div id="A">Hi</div>
+<div id="B">Dude</div>
+
+<script>
+
+//remove element node
+var divA = document.getElementById('A');
+divA.parentNode.removeChild(divA);
+
+//remove text node
+var divB = document.getElementById('B').firstChild;
+divB.parentNode.removeChild(divB);
+
+//log the new DOM updates, which should only show the remaining empty div#B
+console.log(document.body.innerHTML);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+replaceChild works in the same way
+
+
+#+BEGIN_SRC html :tangle replaceChild.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div id="A">Hi</div>
+<div id="B">Dude</div>
+
+<script>
+
+//replace element node
+var divA = document.getElementById('A'); //select div A
+var newSpan = document.createElement('span'); //create a span
+newSpan.textContent = 'Howdy'; //put text in span
+divA.parentNode.replaceChild(newSpan,divA); //get the parent of div a then replace newspan with div A
+
+//replace text node
+var divB = document.getElementById('B').firstChild; //select text inside div b 
+var newText = document.createTextNode('buddy');//create text 
+divB.parentNode.replaceChild(newText, divB); // replace the divB text with new text
+
+//log the new DOM updates, 
+console.log(document.body.innerHTML);
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+
+*** 1.12 cloning nodes using CloneNode
+- use this to duplicate nodes
+#+BEGIN_SRC html :tangle cloneNode().html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<ul>
+  <li>Hi</li>
+  <li>there</li>
+</ul>
+
+<script>
+var cloneul = document.queryselector('ul').cloneNode();
+
+console.log(cloneul.constructor);//logs HTMLUListElement()
+console.log(cloneul.innerHTML);//logs (an empty string) as only the ul was 
+
+</script>
+</body>
+</html>
+#+END_SRC
+When cloning an Element node all attributes and values are also cloned. In fact, only attributes are copied! Everything else you can add (e.g. event handlers) to a DOM node is lost when cloning.
+- it may lead to duplicate document ids in a document
+  
+*** 1.13 grokking node collections - (nodelist and htmlcollection)
+When selecting a group of nodes in a tree - we get the results in two forms 1) nodeList and 2) HTMLCOLLECTION (eg document.scripts)
+These are array like - are not really arrays tho 
+- they can be live or static 
+- by default they are sorted in the collection tree order
+- the collections have length property which reflects the numbers of elements in the list 
+
+*** 1.14 getting a list of child/all the immediate child nodes
+we can get an arraylike  list called nodelist using the childNodes property
+#+BEGIN_SRC html :tangle listing_childNodes().html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<ul>
+  <li>Hi</li>
+  <li>there</li>
+</ul>
+
+<script>
+var ulElementChildNodes = document.querySelector('ul').childNodes;
+console.log(ulElementChildNodes);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 1.15 converting child nodes into Htmlcollection to JavaScript Array
+we can cofirm that node lists are not arrays using isArray() method 
+- Nodelists and Htmlcollections are live lists
+- convering them to JS arrays gives access to methods provided by the Array object like forEach, pop, map, reduce etc
+To convert an array like list to a true JavaScript array pass the array-like list to call() or apply(), in which the call() or apply() is calling a method that returns an un-altered true JavaScript array. In the code below I use the .slice() method, which doesn't really slice anything I am just using it to convert the list to a JavaScript Array due to the fact the slice() returns an array.
+#+BEGIN_SRC html :tangle convert_NodeList_to_array.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href="#"></a>
+
+<script>
+
+console.log(Array.isArray(Array.prototype.slice.call(document.links))); //returns true
+console.log(Array.isArray(Array.prototype.slice.call(document.querySelectorAll('a')))); //returns true
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+
+u can also use Array.from method to convert it 
+
+*** 1.16 traversing nodes in DOM
+    From a referecne of a node like document.querySelector('ul'), it is possible to traverse to or get a referecne to another node by using the following properties 
+- parentNode
+- firstChild
+- lastChild
+- nextSibling
+- previousSibling
+  
+#+BEGIN_SRC html :tangle traversing_nodes_in_dom.html
+<!DOCTYPE html>
+<html lang="en">
+<body><ul><!-- comment -->
+<li id="A"></li>
+<li id="B"></li>
+<!-- comment -->
+</ul>
+
+<script>
+
+//cache selection of the ul
+var ul = document.querySelector('ul');
+
+//What is the parentNode of the ul?
+console.log(ul.parentNode.nodeName);
+
+//What is the first child of the ul?
+console.log(ul.firstChild.nodeName);
+
+//What is the last child of the ul?
+console.log(ul.lastChild.nodeName);
+
+//What is the nextSibling of the first li?
+console.log(ul.querySelector('#A').nextSibling.nodeName);
+
+//What is the previousSibling of the last li?
+console.log(ul.querySelector('#A').previousSibling.nodeName);
+
+</script>
+</body>
+</html>
+#+END_SRC
+The properties above also include text and comment nodes meaning that if we want to traverse them, we need to traverse both the text and comment nodes also but if we want to make traversing easier and escape the text and comment nodes, we can just use the properties below to directly traverse element nodes etc
+- firstElementChild
+- lastElementChild
+- nextElementChild
+- previousElementChild
+- children
+we can also get the number of child elements using childElementCount
+#+BEGIN_SRC html :tangle taversing_elements.html
+
+<!DOCTYPE html>
+<html lang="en">
+<body><ul><!-- comment -->
+<li id="A"></li>
+<li id="B"></li>
+<!-- comment -->
+</ul>
+
+<script>
+
+//cache selection of the ul
+var ul = document.querySelector('ul');
+
+//what is the first child of ul
+console.log(ul.firstElementChild.nodeName);
+
+//What is the  last child of ul
+console.log(ul.lastElementChild.nodeName);
+
+//What is the previous of the last li?
+console.log(ul.querySelector('#A').nextElementSibling.nodeName);
+
+//What is the previousSibling of the last li?
+console.log(ul.querySelector('#B').previousElementSibling.nodeName);
+
+//what are the element only child nodes of ul?
+console.log(ul.children);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 1.17 verify a node poistion in the dom tree with contains() and compareDocumentPosition();
+   if we want to know that a node is contained inside of another, we  can use the contains() method . an example
+  
+#+BEGIN_SRC html :tangle contains().html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<script>
+
+// is <body> inside <html lang="en"> ?
+var inside = document.querySelector('html').contains(document.querySelector('body'));
+
+console.log(inside); //logs true
+
+</script>
+</body>
+</html>
+#+END_SRC
+contains() will return true if the node selected and the node passed in are identical
+
+compareDocumentPosition gives u numbers showing relative positions of that node wrt to the selected node in the html document
+
+*** 1.18 how to determine if two nodes are identical
+two nodes are equal only if 
+1- nodeName, localName, namespaceURI, prefix, nodeValue are equal
+2- attributes NamedNodeMaps are equal. 
+3- childNodes NodeLists are equal.
+
+we can verify this using .isEqualNode() method on a dom 
+
+#+BEGIN_SRC html :tangle isEqualNode().html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<input type="text">
+<input type="text">
+
+<textarea>foo</textarea>
+<textarea>bar</textarea>
+
+<script>
+
+//logs true, because they are exactly idential
+var input = document.querySelector('input');
+console.log(input[0].isEqualNode(input[1]));
+
+//logs false, because the child text node is not the same
+var textArea = document.querySelector('textarea');
+console.log(textarea[0].isEqualNode(textarea[1]));
+
+</script>
+</body>
+</html>
+#+END_SRC
+If you don't care about two nodes being exactly equal but instead want to know if two node references refer to the same node you can simply check it using the === opertor (i.e. document.body === document.body). This will tell us if they are identical but no equal.
+
+** Document Nodes
+
+*** 2.1 document node overview
+The HTMLDocument constructor (which inherits from document) when instantiated represents specifically a DOCUMENT_NODE (i.e. window.document) in the DOM.  
+to verify if this is just ask which constructor was used in the following way 
+#+BEGIN_SRC html :tangle document_node_overview.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+console.log(window.document.constructor); //logs function HTMLDocument() { [native code] }
+console.log(window.document.nodeType); //logs 9, which is a numeric key mapping to DOCUMENT_NODE
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 2.2 html document properties and methods
+To get the properties and methods of the html documents let us use the code below
+#+BEGIN_SRC html :tangle listing_all_document_properties.html
+  <!DOCTYPE html>
+  <html lang="en">
+  <body>
+  <script>
+  //document own properties 
+  console.log(Object.keys(document).sort());
+
+  //document own properties and inherited properties
+  var documentPropertiesInherited = [];
+  for(var p in document){
+	      documentPropertiesInherited.push(p);
+  }
+  console.log(documentPropertiesInherited.sort());
+
+  //document inherited properties only
+  var documentPropertiesOnlyInherited = [];
+
+  for(var p in document){
+  if(
+	      !document.hasOwnProperty(p)){documentPropertiesOnlyInherited.push(p)};
+     }
+  console.log(documentPropertiesOnlyInherited.sort());
+
+  </script>
+  </body>
+  </html>
+#+END_SRC
+some noteworthy properties are
+1- doctype
+2- documentElement
+3- implementation
+4- activeElement
+5- body
+6- head
+7- title
+8- lastModified
+9- referrer 
+10- URL 
+11- defaultview
+12- compatMode
+13- ownerDocument
+14- hasFocus();
+
+*** 2.3 Getting general HTML document information (title, url, referrer, lastModified, compatMode)
+the document object contains some general info about dom 
+we can get them like this
+#+BEGIN_SRC html :tangle general_info.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+var d = document;
+console.log('title = ' +d.title);
+console.log('url = ' +d.URL);
+console.log('referrer = ' +d.referrer);
+console.log('lastModified = ' +d.lastModified);
+
+//logs either BackCompat (Quirks Mode) or CSS1Compat (Strict Mode)
+console.log('compatibility mode = ' +d.compatMode);
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+
+*** 2.4 document child nodes
+Document nodes can contain one Document type node object and one Element type node object. these refer to <!DOCTYPE html> and  <html lang="en">
+so if we ask for children of document, we will get these two things at least
+#+BEGIN_SRC html :tangle document_child_nodes.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+//This is the doctype/DTD
+console.log(document.childNodes[0].nodeType); //logs 10, which is a numeric key mapping to DOCUMENT_TYPE_NODE
+
+//This is the <html> element
+console.log(document.childNodes[1].nodeType); //logs 1, which is a numeric key mapping to ELEMENT_TYPE_NODE
+
+</script>
+</body>
+</html>
+#+END_SRC  
+
+*** 2.5 document provides shortcuts to <!DOCTYPE>, <html lang="en">, <head>, and <body> 
+    
+document.doctype refers to <!DOCTYPE> 
+document.documentElement refers to <html lang="en">
+document.head refers to <head>
+document.body refers to <body>
+
+#+BEGIN_SRC html :tangle document_child_nodes.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+console.log(document.doctype); // logs DocumentType {nodeType=10, ownerDocument=document, ...}
+
+console.log(document.documentElement); // logs <html lang="en">
+
+console.log(document.head); // logs <head>
+
+console.log(document.body); // logs <body>
+
+</script>
+
+</body>
+</html>
+#+END_SRC
+*** 2.6 Detecting DOM specifications/features using document.implementation.hasFeature()
+
+    we can ask if a particular feature is supported in the browser using hasFeature method.
+
+#+BEGIN_SRC html :tangle has_feature_method.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+console.log(document.implementation.hasFeature('Core','2.0'));
+console.log(document.implementation.hasFeature('Core','3.0')); </script>
+
+</body>
+</html>
+#+END_SRC
+
+*** 2.7 Get a reference to the focus/active node in the document
+
+using document.activeElement we can get a reference to a node in the document that is focused/active. 
+in the code below we set the focus to text area then get a reference to it using the activeElement property
+#+BEGIN_SRC html :tangle has_feature_method.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+document.querySelector('textarea').focus();
+console.log(document.activeElement);
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 2.8 Determing if the document or any node inside of the document has focus
+if we want to know if any node inside the document has focus we can use this 
+#+BEGIN_SRC html :tangle reference_to_any_element_focused_in_the_document.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<script>
+
+//If you keep focus on the window/tab that has the document loaded its true. If not it's false.
+setTimeout(function(){console.log(document.hasFocus())},5000);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+
+
+
+
+
+*** 2.9 document.defaultview is a shortcut to the head/global object
+
+    to select our current window we can use this
+
+#+BEGIN_SRC html :tangle reference_to_any_element_focused_in_the_document.html
+ <!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+
+console.log(document.defaultView) //reference, head JS object. Would be window object in a browser.
+
+</script>
+</body>
+</html>   
+#+END_SRC
+
+*** 2.10 Getting a reference to the Document from an element using ownerDocument
+
+we can also use ownerDocument to get a reference to the node the document is contained within
+#+BEGIN_SRC html :tangle ownerDocument.html
+ <!DOCTYPE html>
+<html lang="en">
+<body>
+
+<iframe src="http://someFileServedFromServerOnSameDomain.html"></iframe>
+
+<script>
+
+//get the window.document that the <body> is contained within
+console.log(document.body.ownerElement);
+
+//get the window.document the <body> inside of the iframe is contained within
+console.log(window.frames[0].document.body.ownerElement);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+
+** Element Nodes
+   
+*** 3.1 HTML*Element object overview
+    all html objects have a unique js constructor that instantiates them as a node object in the dom tree
+   example an a element is created from HTMLAnchorElement 
+**** there are many constructors - list (don't worry too much about remembering the list, just look it up once)
+
+- HTMLHtmlElement
+- HTMLHeadElement
+- HTMLLinkElement
+- HTMLTitleElement
+- HTMLMetaElement
+- HTMLBaseElement
+- HTMLIsIndexElement
+- HTMLStyleElement
+- HTMLBodyElement
+- HTMLFormElement
+- HTMLSelectElement
+- HTMLOptGroupElement
+- HTMLOptionElement
+- HTMLInputElement
+- HTMLTextAreaElement
+- HTMLButtonElement
+- HTMLLabelElement
+- HTMLFieldSetElement
+- HTMLLegendElement
+- HTMLUListElement
+- HTMLOListElement
+- HTMLDListElement
+- HTMLDirectoryElement
+- HTMLMenuElement
+- HTMLLIElement
+- HTMLDivElement
+- HTMLParagraphElement
+- HTMLHeadingElement
+- HTMLQuoteElement
+- HTMLPreElement
+- HTMLBRElement
+- HTMLBaseFontElement
+- HTMLFontElement
+- HTMLHRElement
+- HTMLModElement
+- HTMLAnchorElement
+- HTMLImageElement
+- HTMLObjectElement
+- HTMLParamElement
+- HTMLAppletElement
+- HTMLMapElement
+- HTMLAreaElement
+- HTMLScriptElement
+- HTMLTableElement
+- HTMLTableCaptionElement
+- HTMLTableColElement
+- HTMLTableSectionElement
+- HTMLTableRowElement
+- HTMLTableCellElement
+- HTMLFrameSetElement
+- HTMLFrameElement
+- HTMLIFrameElement
+
+*** 3.2 HTML*Element object properties and methods (including inherited)
+    we can simply see what properties these elements have by the following code 
+    
+#+BEGIN_SRC html :tangle inherited_properties_in_elements.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href="#">Hi</a>
+
+<script>
+
+var anchor = document.querySelector('a');
+
+//element own properties
+console.log(Object.keys(anchor).sort());
+
+//element own properties & inherited properties
+var documentPropertiesIncludeInherited = [];
+for(var p in document){
+	documentPropertiesIncludeInherited.push(p);
+}
+console.log(documentPropertiesIncludeInherited.sort());
+
+//element inherited properties only
+var documentPropertiesOnlyInherited = [];
+for(var p in document){
+	if(!document.hasOwnProperty(p)){
+		documentPropertiesOnlyInherited.push(p);
+	}
+}
+console.log(documentPropertiesOnlyInherited.sort());
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+**** some good properties to take a note of are follows
+>> createElement()
+>> tagName
+>> children
+>> getAttribute()
+>> setAttribute()
+>> hasAttribute()
+>> removeAttribute()
+>> classList()
+>> dataset
+>> attributes
+
+*** 3.3 Creating Elements
+    element nodes are created when a browser gets a interrupt html document and a corresponding dom is built on the contents of the douemnt
+after this we can also create nodes on our own using createElement()
+
+#+BEGIN_SRC html :tangle creatingelements.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script>
+var elementNode = document.createElement('textarea');
+document.body.appendChild(elementNode);
+
+console.log(document.querySelector('textarea'));
+
+</script>
+</body>
+</html>
+#+END_SRC
+the value we pass in the createelement is the tagname of the element that we want to create
+
+*** 3.4 Get the tag name of an element
+
+    we can access the tag name of element by tagName property
+it returns the same value what nodeName would return
+but that value is always returned in upperCase
+
+#+BEGIN_SRC html :tangle getting_tag_names.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href="#">Hi</a>
+
+<script>
+console.log(document.querySelector('a').tagName);
+console.log(document.querySelector('a').nodeName);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+
+*** 3.5 Getting a list/collection of element attributes and values
+
+    we can get a list of all the attributes that an element can have using the attributes property
+The list is returned as a NamedNodeMap
+let us loop over the attributes collection exposing each attr node object contained in the collection
+#+BEGIN_SRC html :tangle getting_a_list_of_attributes.html
+  <!DOCTYPE html>
+  <html lang="en">
+  <body>
+
+  <a href='#' title="title" data-foo="dataFoo" class="yes" style="margin:0;" foo="boo"></a>
+
+  <script>
+  var atts = document.querySelector('a').attributes;
+
+  for(var i = 0; i < atts.length;i ++)
+  {
+      console.log(atts[i].nodeName+'='+atts[i].nodeValue);
+  }
+
+  </script>
+  </body>
+  </html>
+#+END_SRC
+the array returned is live that means its contents can be changed anytime
+
+-- the author of the book thought that dealing with attributes is messy (from what i understood) , the only merit is to return a live list of attributes 
+
+
+*** 3.6 Getting, Setting, & Removing an element's attribute value
+
+    to get set and remove attributes values, use these methods 
+    #+BEGIN_SRC html :tangle get_set_remove.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href='#' title="title" data-foo="dataFoo" style="margin:0;" class="yes" foo="boo" hidden="hidden">#link</a>
+
+<script>
+
+var atts = document.querySelector('a');
+
+
+//remove attributes
+atts.removeAttribute('href');
+atts.removeAttribute('title');
+atts.removeAttribute('style');
+atts.removeAttribute('data-foo');
+atts.removeAttribute('class');
+atts.removeAttribute('foo'); //custom attribute
+atts.removeAttribute('hidden'); //boolean attribute
+
+//set (really re-set) attributes
+atts.setAttribute('href','#');
+atts.setAttribute('title','title');
+atts.setAttribute('style','margin:0;');
+atts.setAttribute('data-foo','dataFoo');
+atts.setAttribute('class','yes');
+atts.setAttribute('foo','boo');
+atts.setAttribute('hidden','hidden'); //boolean attribute requires sending the attribute as the value too
+
+//get attributes
+console.log(atts.getAttribute('href'));
+console.log(atts.getAttribute('title'));
+console.log(atts.getAttribute('style'));
+console.log(atts.getAttribute('data-foo'));
+console.log(atts.getAttribute('class'));
+console.log(atts.getAttribute('foo'));
+console.log(atts.getAttribute('hidden'));
+
+</script>
+</body>
+</html>
+#+END_SRC
+- use removeAttribute instead of setting the attribute to null or "" using setAttribute
+
+*** 3.7 Verifying an element has a specific attribute
+
+    to determine if an element has an attribute, use hasAttribute method 
+#+BEGIN_SRC html :tangle hasAttribute.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href='#' title="title" data-foo="dataFoo" style="margin:0;" class="yes" goo></a>
+
+<script>
+
+var atts = document.querySelector('a');
+
+console.log(
+	atts.hasAttribute('href'),
+	atts.hasAttribute('title'),
+	atts.hasAttribute('style'),
+	atts.hasAttribute('data-foo'),
+	atts.hasAttribute('class'),
+	atts.hasAttribute('goo') //Notice this is true regardless if a value is defined 
+)
+
+</script>
+</body>
+</html>
+#+END_SRC
+this method returns true for a match, even if the attribute is null or does not have a value
+
+this can be very usetful to check if a check box etc is checked or not 
+#+BEGIN_SRC html :tangle hasAttribute_for_check_box.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<input type="checkbox" checked></input>
+
+<script>
+
+var atts = document.querySelector('input');
+
+console.log(atts.hasAttribute('checked')); //logs true
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+
+*** 3.8 Getting a list of class attribute values
+
+    we can get an access list of class attributes that is much easier to work with than a space-delimited string value returned from the className property
+    in the example below we constrast the two
+    #+BEGIN_SRC html :tangle list_of_class_attribute_values.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div class="big brown bear"></div>
+
+<script>
+
+var elm = document.querySelector('div');
+
+console.log(elm.classList); //big brown bear {0="big", 1="brown", 2="bear", length=3, ...}
+console.log(elm.className); //logs 'big brown bear'
+
+</script>
+</body>
+</html>
+#+END_SRC
+- classList is an an array like collection but it only has a length property
+  
+
+*** 3.9 Adding & removing sub-values to a class attribute
+
+    using the classList.add() and  classList.remove() methods its very simple to edit attributes
+#+BEGIN_SRC html :tangle class_list_methods.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<div class="dog"></div>​
+
+<script>
+
+var elm = document.querySelector('div');
+
+elm.classList.add('cat');
+elm.classList.remove('dog');
+console.log(elm.className); //'cat'
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+
+*** 3.10 Toggling a class attribute value
+
+    we can toggle sub value of a class attribute using classList.toggle()
+   #+BEGIN_SRC html :tangle toggling_attributes.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<div class="visible"></div>​
+
+<script>
+var elm = document.querySelector('div');
+elm.classList.toggle('visible');
+elm.classList.toggle('grow');
+console.log(elm.className);
+</script>
+</body>
+</html>
+
+#+END_SRC 
+
+*** 3.11 Determining if a class attribute value contains a specific value
+
+    to check if a classList contains a specific value, we can use the classList.contains() method 
+    it returns a boolean value
+    #+BEGIN_SRC html :tangle contains.html
+    <!DOCTYPE html>
+<html lang="en">
+<body>
+<div class="big brown bear"></div>​
+
+<script>
+
+var elm = document.querySelector('div');
+
+console.log(elm.classList.contains('brown')); //logs true
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 3.12 Getting & Setting data-* attribute
+    the dataset property of an element node provides an object containing all the attributes of an element that start with data-* 
+we can also manipulate this object and have the changes reflected in the dom 
+#+BEGIN_SRC html :tangle dataset.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div data-foo-foo="foo" data-bar-bar="bar"></div>​
+
+<script>
+
+var elm = document.querySelector('div');
+
+//get
+console.log(elm.dataset.fooFoo); //logs 'foo'
+console.log(elm.dataset.barBar); //logs 'bar'
+
+//set
+elm.dataset.gooGoo = 'goo';
+console.log(elm.dataset); //logs DOMStringMap {fooFoo="foo", barBar="bar", gooGoo="goo"}
+
+//what the element looks like in the DOM 
+console.log(elm); //logs <div data-foo-foo="foo" data-bar-bar="bar" data-goo-goo="goo">
+
+</script>
+</body>
+</html>
+#+END_SRC
+dataset contains camel case versions of data attributes. Meaning data-foo-foo will be listed as the property fooFoo in the dataset DOMStringMap object. The- is replaced by camel casing.
+
+Removing a data-* attribute from the DOM is as simple using the delete operator on a property of the datset (e.g. delete dataset.fooFoo)
+
+** Element Node Selecting
+
+*** 4.1 Selecting a specific element node
+    the most common methods of getting reference to nodes are getElementById() and querySelector()
+    example
+#+BEGIN_SRC html :tangle selecting_nodes.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<ul>
+<li>Hello</li>
+<li>big</li>
+<li>bad</li>
+<li id="last">world</li>
+</ul>
+
+<script>
+
+console.log(document.querySelector('li').textContent); //logs Hello
+console.log(document.getElementById('last').textContent); //logs world
+
+</script>
+</body>
+</html>
+#+END_SRC
+The querySelector method is much more robust as compared to the getElementById method because we can pass a whole CSS selector in the former method
+- querySelector returns the first node that matches on the basis of the query provided
+
+*** 4.2 Selecting/creating a list (aka NodeList) of element nodes
+    we can select list of nodes using 
+-querySelectorAll()
+-getElementsByTagName()
+-getElementsByClassName()
+#+BEGIN_SRC html :tangle selecting_Lists_Of_Nodes.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<ul>
+<li class="liClass">Hello</li>
+<li class="liClass">big</li>
+<li class="liClass">bad</li>
+<li class="liClass">world</li>
+</ul>
+
+<script>
+
+//all of the methods below create/select the same list of <li> elements from the DOM
+console.log(document.querySelectorAll('li'));
+console.log(document.getElementsByTagName('li'));
+console.log(document.getElementsByClassName('liClass'));
+
+</script>
+</body>
+</html>
+#+END_SRC
+- these methods create Nodelists which are live 
+  - the querySelectorAll does not return a live list tho 
+- these methods can also be defined on a single element this allows us to limit their specific veins on the dom for example we can do something like
+document.getElementById('header').getElementsByClassName('a');
+we can also use getElementsByName
+the Nodelists are array-like but they only have the length property
+
+*** 4.3 Selecting all immediate child element nodes
+    we can get a list of all the child nodes using children property
+#+BEGIN_SRC html :tangle selecting_all_child_nodes.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<ul>
+<li><strong>Hi</strong></li>
+<li>there</li>
+</ul>
+
+<script>
+
+var ulElement = document.querySelector('ul').children;
+
+//logs a list/array of all immediate child element nodes
+console.log(ulElement); //logs [<li>, <li>]
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 4.4 Contextual element selecting
+   the The methods querySelector(), querySelectorAll(), getElementsByTagName(), and getElementsByClassName typically accessed from the document object  
+   but they can also be accessed from elements
+   #+BEGIN_SRC html :tangle contextual_Element_Selection.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>
+<ul>
+<li class="liClass">Hello</li>
+<li class="liClass">big</li>
+<li class="liClass">bad</li>
+<li class="liClass">world</li>
+</ul>
+</div>
+
+<ul>
+<li class="liClass">Hello</li>
+</ul>
+
+<script>
+
+//select a div as the context to run the selecting methods only on the contents of the div
+var div = document.querySelector('div');
+
+console.log(div.querySelector('ul'));
+console.log(div.querySelectorAll('li'));
+console.log(div.getElementsByTagName('li'));
+console.log(div.getElementsByClassName('liClass'));
+
+</script>
+</body>
+</html>
+#+END_SRC
+These methods will work both on dom and the normal dom as well as elements created in memory 
+
+*** 4.5 Pre-configured selections/lists of element nodes
+    pre cofigured or legacy lists
+document.all - all elements in HTML document
+document.forms - all <form> elements in HTML document
+document.images - all <img> elements in HTML document
+document.links - all <a> elements in HTML document
+document.scripts - all <script> elements in HTML document
+document.styleSheets - all <link> or <style> objects in HTML document
+
+*** 4.6 Verify an element will be selected using matchesSelector()
+    using matchesSelector we can determine if an element will match a selector String. 
+** Element Node Geometry and Scrolling Geometry
+*** 5.1 Element node size, offsets, and scrolling overview
+    dom nodes are painted into shapes which we can see when a web browser parses the DOM
+the apis which deal with the visual representation and manipulation of the geometry of these nodes is given in CSSOM view module
+let us see how they work 
+*** 5.2 Getting an elements offsetTop and offsetLeft values relative to the offsetParent
+    we can get the offset value of a node from its parent using offsetTop and offsetLeft 
+this is taken from the nearest parent whose css position value is not equal to static
+#+BEGIN_SRC html :tangle offset.html
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+  <style>
+  body{margin:0;}
+  #blue{height:100px;width:100px;background-color:blue;border:10px solid gray; padding:25px;margin:25px;}
+  #red{height:50px;width:50px;background-color:red;border:10px solid gray;}
+  </style>
+  </head>
+  <body>
+
+  <div id="blue"><div id="red"></div></div>
+
+  <script>
+
+  var div = document.querySelector('#red'); 
+
+  console.log(div.offsetLeft); //logs 60
+  console.log(div.offsetTop); //logs 60
+  console.log(div.offsetParent); //logs <body>
+
+  </script>
+  </body>
+  </html>
+#+END_SRC
+
+#+DOWNLOADED: screenshot @ 2023-06-05 09:53:28
+[[file:2023-06-05_09-53-28_screenshot.png]]
+
+in the image above if we change the blue div to an absolute position we will have the blue div as the parent from which offset is taken because it has an absolute position 
+#+BEGIN_SRC html :tangle changing_parent.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+#blue{height:100px;width:100px;background-color:blue;border:10px solid gray; padding:25px;margin:25px;position:absolute;}
+#red{height:50px;width:50px;background-color:red;border:10px solid gray;}
+</style>
+</head>
+<body>
+
+<div id="blue"><div id="red"></div></div>
+
+<script>
+
+var div = document.querySelector('#red'); 
+
+console.log(div.offsetLeft); //logs 25
+console.log(div.offsetTop); //logs 25
+console.log(div.offsetParent); //logs <div id="blue">
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+
+*** 5.3 Getting an elements top, right, bottom and left border edge offset relative to the viewport using getBoundingClientRect()
+    using getBoundingClientRect() method we can get the position of an elements outside border edges
+the left and right edges are measured from the an element at the left of the viewport and the top and bottom are measured from the outside border edge to the top edge of the vp 
+#+BEGIN_SRC html :tangle bounding_rectangle.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+body{margin:0;}
+div{height:50px;width:50px;background-color:red;border:10px solid gray;margin:100px;}
+</style>
+</head>
+<body>
+
+<div></div>
+
+<script>
+
+var divEdges = document.querySelector('div').getBoundingClientRect(); 
+
+console.log(divEdges.top, divEdges.right, divEdges.bottom, divEdges.left); //logs '100 170 170 100'
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+
+
+*** 5.4 Getting an elements size (border + padding + content) in the viewport
+    we can also get height and width of our rectangle using the getBoundingClientRect()
+    and the same can be found by using offsetHeight and offsetWidth
+#+BEGIN_SRC html :tangle getting_height_and_width.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+div{height:25px;width:25px;background-color:red;border:25px solid gray;padding:25px;}
+</style>
+</head>
+<body>
+
+<div></div>
+
+<script>
+
+var div = document.querySelector('div').getBoundingClientRect(); 
+
+console.log(div.height, div.width); //logs '125 125'
+//because 25px border + 25px padding + 25 content + 25 padding + 25 border = 125
+
+console.log(div.offsetHeight, div.offsetWidth); //logs '125 125'
+//because 25px border + 25px padding + 25 content + 25 padding + 25 border = 125
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 5.5 Getting an elements size (padding + content) in the viewport excluding borders
+   clientWidth and clientHeight properties return a total size of an element by adding together the content of the element and its padding excluding the border sizes 
+   #+BEGIN_SRC html :tangle clientWidth_clientHeight.html 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+div{height:25px;width:25px;background-color:red;border:25px solid gray;padding:25px;}
+</style>
+</head>
+<body>
+
+<div></div>
+
+<script>
+
+var div = document.querySelector('div'); 
+
+console.log(div.clientHeight, div.clientWidth); //logs '75 75' because 25px padding + 25 content + 25 padding = 75
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 5.6 Getting topmost element in viewport at a specific point using elementFromPoint()
+    using elementFromPoint() its possible to get a reference to the topmost element in a html document at a specific point in the document
+let us suppose we have a div at 50x and 50y, we can get its reference using the method, the code will be like this 
+#+BEGIN_SRC html :tangle elementFromPoint().html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+div{height:50px;width:50px;background-color:red;position:absolute;top:50px;left:50px;}
+</style>
+</head>
+<body>
+
+<div id="bottom"></div><div id="top"></div>
+
+<script>
+
+console.log(document.elementFromPoint(50,50)); //logs <div id="top">
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 5.7 Getting the size of the element being scrolled using scrollHeight and scrollWidth
+    scrollWidth and scrollHeight give us the width and height of the element being scrolled 
+    #+BEGIN_SRC html :tangle scrollHeight and scrollWidth
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+*{margin:0;padding:0;}
+div{height:100px;width:100px; overflow:auto;}
+p{height:1000px;width:1000px;background-color:red;}
+</style>
+</head>
+<body>
+
+<div><p></p></div>
+
+<script>
+
+var div = document.querySelector('div'); 
+
+console.log(div.scrollHeight, div.scrollWidth); //logs '1000 1000'
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+if the item u have inside the scrollable area is smaller than the whole area, and you want to find out the height of that item, use clientHeight and not the one we learnt about just now  
+
+*** 5.8 Getting & Setting pixels scrolled from the top and left using scrollTop and scrollLeft
+scrollTop tells you how much the content is scrolled vertically from the top, and scrollLeft tells you how much it is scrolled horizontally from the left. You can use these properties to read and change the scroll position on a webpage.
+#+BEGIN_SRC html :tangle scrollTop_and_scrollLeft.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+div{height:100px;width:100px;overflow:auto;}
+p{height:1000px;width:1000px;background-color:red;}
+</style>
+</head>
+<body>
+
+<div><p></p></div>
+
+<script>
+
+var div = document.querySelector('div'); 
+
+div.scrollTop = 750;
+div.scrollLeft = 750;
+
+console.log(div.scrollTop,div.scrollLeft); //logs '750 750' 
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 5.9 Scrolling an element into view using scrollIntoView()
+   This seems like quite an important property, to get to a node inside our webpage where we can reach be scrolling, we can use the scrollIntoView property  
+   #+BEGIN_SRC html :tangle scroll_into_view().html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+div{height:30px;width:30px; overflow:auto;}
+p{background-color:red;}
+</style>
+</head>
+<body>
+
+<div>
+<content>
+<p>1</p>
+<p>2</p>
+<p>3</p>
+<p>4</p>
+<p>5</p>
+<p>6</p>
+<p>7</p>
+<p>8</p>
+<p>9</p>
+<p>10</p>            
+</content>        
+</div>
+
+<script>
+
+//select <p>5</p> and scroll that element into view, I pass children '4' because its a zero index array-like structure
+document.querySelector('content').children[4].scrollIntoView(true);
+    
+</script>
+</body>
+</html>
+#+END_SRC
+
+if we pass true in scrollIntoView we are going to the top of the element whereas if we pass false, we go to the bottom of that element
+
+** Element Node inline styles
+*** 6.1 Style Attribute (aka element inline CSS properties) Overview
+    inline styles are what we can use to give inline css to out elements, its a sort of a special attribute if you will
+#+BEGIN_SRC html :tangle accessing_the_styles.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div style="background-color:red;border:1px solid black;height:100px;width:100px;"></div>
+
+<script>
+
+var divStyle = document.querySelector('div').style; 
+
+//logs CSSStyleDeclaration {0="background-color", ...}
+console.log(divStyle);
+
+ </script>
+</body>
+</html>
+#+END_SRC
+
+
+*** 6.2 Getting, setting, & removing individual inline CSS properties
+we can manipulate individual css properties  very easily 
+here's how 
+#+BEGIN_SRC html :tangle manipulating_css_properties.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div></div>
+
+<script>
+
+var divStyle = document.querySelector('div').style;
+
+//set
+divStyle.backgroundColor = 'red';
+divStyle.border = '1px solid black';
+divStyle.width = '100px';
+divStyle.height = '100px';
+
+//get
+console.log(divStyle.backgroundColor);
+console.log(divStyle.border);
+console.log(divStyle.width);
+console.log(divStyle.height);
+
+/*remove
+divStyle.backgroundColor = '';
+divStyle.border = '';
+divStyle.width = '';
+divStyle.height = '';
+*/
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+
+the property names in the style objects are not exactly the same as we write our css properties rather, there is a very simple translation
+the hypen between the css property is removed and it is converted to camel case
+so if i want to change font-size to JavaScript style object then I will write it as fontSize 
+or border-left-style becomes borderLeftStyle 
+or text-decoration:Underline becomes textDecorationUnderline
+
+in addition to the way above, we can also use the getPropertyValue, setPropertyValue and removePropertyValue
+the example is below
+also take notice that these methods will be using a hypen and not the javascript style object
+#+BEGIN_SRC html :tangle using_methods_to_manipulate_properties.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+</style>
+</head>
+
+<body>
+
+<div style="background-color:green;border:1px solid purple;"></div>
+
+<script>
+
+var divStyle = document.querySelector('div').style;
+
+//set
+divStyle.setProperty('background-color','red');
+divStyle.setProperty('border','1px solid black');
+divStyle.setProperty('width','100px');
+divStyle.setProperty('height','100px');
+
+//get
+console.log(divStyle.getPropertyValue('background-color'));
+console.log(divStyle.getPropertyValue('border','1px solid black'));
+console.log(divStyle.getPropertyValue('width','100px'));
+console.log(divStyle.getPropertyValue('height','100px'));
+
+/*remove
+divStyle.removeProperty('background-color');
+divStyle.removeProperty('border');
+divStyle.removeProperty('width');
+divStyle.removeProperty('height');
+*/
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 6.3 Getting, setting, & removing all inline CSS properties
+ we can manipulate css properties using cssText property of the CSSStyleDeclaration object as well as the getAttribute() and setAttribute() method
+we can also remove all the styles using a javascript string
+#+BEGIN_SRC html :tangle cssTextProperty.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div></div>
+
+<script>
+
+var div = document.querySelector('div');
+var divStyle = div.style;
+
+//set using cssText
+divStyle.cssText = 'background-color:red;border:1px solid black;height:100px;width:100px;';
+//get using cssText
+console.log(divStyle.cssText);
+//remove
+divStyle.cssText = '';
+
+//exactly that same outcome using setAttribute() and getAttribute()
+
+//set using setAttribute
+div.setAttribute('style','background-color:red;border:1px solid black;height:100px;width:100px;');
+//get using getAttribute
+console.log(div.getAttribute('style'));
+//remove
+div.removeAttribute('style');
+
+</script>
+</body>
+</html>
+#+END_SRC
+If its not obvious you should note that replacing the style attribute value with a new string is the fastest way to make multiple changes to an elements style.
+
+*** 6.4 Getting an elements computed styles (i.e. actual styles including any from the cascade) using getComputedStyle()
+the style property only contains properties that have been defined via the style attribute 
+to get all the properties that are from the cascade, as well as inline styles, we can use getComputedStyle();
+#+BEGIN_SRC html :tangle gettingComputedStyles.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+​div{
+    background-color:red;
+    border:1px solid black;
+    height:100px;
+    width:100px;
+}
+</style>
+</head>
+
+<body>
+
+<div style="background-color:green;border:1px solid purple;"></div>
+
+<script>
+
+var div = document.querySelector('div');
+
+//logs rgb(0, 128, 0) or green, this is an inline element style
+console.log(window.getComputedStyle(div).backgroundColor);
+
+//logs 1px solid rgb(128, 0, 128) or 1px solid purple, this is an inline element style
+console.log(window.getComputedStyle(div).border);
+
+//logs 100px, note this is not an inline element style
+console.log(window.getComputedStyle(div).height);
+
+//logs 100px, note this is not an inline element style
+console.log(window.getComputedStyle(div).width);
+
+</script>
+</body>
+</html>
+#+END_SRC
+The getComputedStyle honors the css Specificity Hierarchy 
+
+*** 6.5 Apply & remove css properties on an element using class & id attributes
+    The most common way of manipulating styles is by using the class and id attibutes and leveraging setAttribute() and classList.add();
+we can remove these very easily too just look at the example below
+#+BEGIN_SRC html :tangle settAttribute()andClassList.add().html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+.foo{
+  background-color:red;
+  padding:10px;
+}
+#bar{
+  border:10px solid #000;
+  margin:10px;
+}
+</style>
+</head>
+<body>
+
+<div></div>
+
+<script>
+
+var div = document.querySelector('div');
+
+//set
+div.setAttribute('id','bar');
+div.classList.add('foo');
+
+/*remove
+div.removeAttribute('id');
+div.classList.remove('foo');
+*/
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+** Text Nodes
+*** 7.1 Text object overview
+    all text objects in html are instances of Text() constructor function
+when document is parsed, the text mixed in with the elements is converted to text nodes
+*** 7.2 Text object & properties
+    to get the properties of text objects
+#+BEGIN_SRC html :tangle textPropertiesIncludeInherited.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<p>hi</p>
+
+<script>
+var text = document.querySelector('p').firstChild;
+
+//text own properties
+console.log(Object.keys(text).sort());
+
+//text own properties & inherited properties
+var textPropertiesIncludeInherited = [];
+for(var p in text){
+	textPropertiesIncludeInherited.push(p);
+}
+console.log(textPropertiesIncludeInherited.sort());
+
+//text inherited properties only
+var textPropertiesOnlyInherited = [];
+for(var p in text){
+	if(!text.hasOwnProperty(p)){
+		textPropertiesOnlyInherited.push(p);
+	}
+}
+console.log(textPropertiesOnlyInherited.sort());
+
+</script>
+</body>
+</html>
+#+END_SRC
+some imp text properties are 
+textContent
+> splitText()
+> appendData()
+> deleteData()
+> insertData()
+> replaceData()
+> subStringData()
+> normalize()
+> data
+> document.createTextNode()
+*** 7.3 White space creates Text nodes
+    if there is a white space, it will be considered as a text node because spaces are, afterall, characters
+   even carriage return or enter is also considered a text node 
+  #+BEGIN_SRC html :tangle whitespace.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<p id="p1"></p>
+<p id="p2"> </p>
+
+<script>
+
+console.log(document.querySelector('#p1').firstChild) //logs null
+console.log(document.querySelector('#p2').firstChild.nodeName) //logs #text
+
+</script>
+</body>
+</html>
+#+END_SRC
+for carriage return
+#+BEGIN_SRC html :tangle carriage return .html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<p id="p1"></p> //yes there is a carriage return text node before this comment, even this comment is a node
+<p id="p2"></p>
+
+<script>
+
+console.log(document.querySelector('#p1').nextSibling) //logs Text
+
+</script>
+</body>
+</html>
+#+END_SRC
+ 
+
+*** 7.4 Creating & Injecting Text Nodes
+    we can create text nodes using createTextNode();
+#+BEGIN_SRC html :tangle creatingtextNodes.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div></div>
+
+<script>
+
+var textNode = document.createTextNode('Hi');
+document.querySelector('div').appendChild(textNode);
+
+console.log(document.querySelector('div').innerText); // logs Hi
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+
+other way to insert into dom textNode
+
+
+
+#+BEGIN_SRC html :tangle other way to insert text nodes.html
+<!DOCTYPE html>
+<html lang="en">
+
+<div></div>
+
+<body>
+
+<script>
+
+var elementNode = document.createElement('p');
+var textNode = document.createTextNode('Hi');
+elementNode.appendChild(textNode);
+document.querySelector('div').appendChild(elementNode);
+
+console.log(document.querySelector('div').innerHTML); //logs <div>Hi</div>
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 7.5 Getting a Text node value with .data or nodeValue
+    we can simply get a text inside a textNode by using .data or nodeValue property
+#+BEGIN_SRC html :tangle .data and nodevalue.html
+<!DOCTYPE html>
+<html lang="en">
+
+<p>Hi, <strong>cody</strong></p><body>
+
+<script>
+
+console.log(document.querySelector('p').firstChild.data); //logs 'Hi,'
+console.log(document.querySelector('p').firstChild.nodeValue); //logs 'Hi,'
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 7.6 Maniputlating Text nodes with appendData(), deleteData(), insertData(), replaceData(), subStringData()
+The CharacterData object that Text nodes inherits methods from provides the following methods for manipulating and extracting sub values from Text node values.
+
+appendData()
+deleteData()
+insertData()
+replaceData()
+subStringData()
+examples are as follows 
+#+BEGIN_SRC html :tangle appendData, deleteData, insertData,replaceData.html
+<!DOCTYPE html>
+<html lang="en">
+
+<p>Go big Blue Blue<body>
+
+<script>
+
+var pElementText = document.querySelector('p').firstChild;
+
+//add !
+pElementText.appendData('!');
+console.log(pElementText.data);
+
+//remove first 'Blue'
+pElementText.deleteData(7,5);
+console.log(pElementText.data);
+
+//insert it back 'Blue'
+pElementText.insertData(7,'Blue ');
+console.log(pElementText.data);
+
+//replace first 'Blue' with 'Bunny'
+pElementText.replaceData(7,5,'Bunny ');
+console.log(pElementText.data);
+
+//extract substring 'Blue Bunny'
+console.log(pElementText.substringData(7,10));
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+
+*** 7.7 When mulitple sibling Text nodes occur
+    sibling text nodes usually do not occur as they are combined by the browser but if there are different tags etc like strong in between then they are split into node groups
+    #+BEGIN_SRC html :tangle sibling Text nodes.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<p>Hi, <strong>cody</strong> welcome!</p>
+
+<script>
+
+var pElement = document.querySelector('p');
+
+console.log(pElement.childNodes.length); //logs 3
+
+console.log(pElement.firstChild.data); // is text node or 'Hi, '
+console.log(pElement.firstChild.nextSibling); // is Element node or <strong>
+console.log(pElement.lastChild.data); ​// is text node or ' welcome!'
+
+</script>
+</body>
+</html>
+#+END_SRC
+the other case is when we add the nodes ourselves 
+#+BEGIN_SRC html :tangle us adding text nodes.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<script>
+
+var pElementNode = document.createElement('p');
+var textNodeHi = document.createTextNode('Hi ');
+var textNodeCody = document.createTextNode('Cody');
+
+pElementNode.appendChild(textNodeHi);
+pElementNode.appendChild(textNodeCody);
+
+document.querySelector('div').appendChild(pElementNode);
+
+console.log(document.querySelector('div p').childNodes.length); //logs 2​​​​​​​​​​​​​​​​​​
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 7.8 Remove markup and return all child Text nodes using textContent
+    to just get all the text nodes from the html we can use the textContent property
+#+BEGIN_SRC html :tangle all text nodes.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<h1> Dude</h2>
+<p>you <strong>rock!</strong></p>
+<script>
+
+console.log(document.body.textContent); //logs 'Dude you rock!' with some added white space
+
+</script>
+</body>
+</html>
+#+END_SRC
+when it is used to set a text content within node, it will remove all the child nodes first and replace them with a single text node
+#+BEGIN_SRC html :tangle textcontetnt.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<div>
+<h1> Dude</h2>
+<p>you <strong>rock!</strong></p>
+</div>
+<script>
+
+document.body.textContent = 'You don\'t rock!'
+console.log(document.querySelector('div').textContent); //logs 'You don't rock!'
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 7.9 The difference between textContent & innerText
+    | text content                                               | inner text                                 |
+    |------------------------------------------------------------+--------------------------------------------|
+    | unaware of css                                             | aware of css                               |
+    | doesnt trigger reflow                                      | triggers a reflow                          |
+    | does not ignore text content in scripts and style elements | ignores text in scripts and style elements |
+    | normalise every text - remove all the whitespaces etc      | won't remove whitespaces etc               |
+    | implemented in dom specifications/features                 | considered non standard                    |
+
+*** 7.10 Combine sibling Text nodes into one text node using normalize()
+    normalize() can concatenate sibling text nodes in the dom into a single text node
+#+BEGIN_SRC html :tangle combine.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<div></div>
+<script>
+
+var pElementNode = document.createElement('p');
+var textNodeHi = document.createTextNode('Hi');
+var textNodeCody = document.createTextNode('Cody');
+
+pElementNode.appendChild(textNodeHi);
+pElementNode.appendChild(textNodeCody);
+
+document.querySelector('div').appendChild(pElementNode);
+
+console.log(document.querySelector('p').childNodes.length); //logs 2
+
+document.querySelector('div').normalize(); //combine our sibling text nodes
+
+console.log(document.querySelector('p').childNodes.length); //logs 1
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+
+*** 7.11 Splitting a text node using splitText()
+When splitText() is invoked on a Text node, it changes the original node by dividing its text at a given offset. It creates a fresh Text node that includes the separated text portion. In the provided code example, the text node "Hey Yo!" is divided after "Hey", preserving "Hey" in the DOM, while "Yo!" is transformed into a new text node returned by the splitText() function.
+#+BEGIN_SRC html :tangle splitText().html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<p>Hey Yo!</p>
+
+<script>
+
+//returns a new text node, taken from the DOM
+console.log(document.querySelector('p').firstChild.splitText(4).data); //logs Yo!
+
+//What remains in the DOM...
+console.log(document.querySelector('p').firstChild.textContent); //logs Hey
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+
+** Document Fragment Nodes
+*** 8.1 DocumentFragment object overview
+    it is a dom external to our dom, it is like a virtual dom tree
+it is exactly like a dom tree but live in the memory
+*** 8.2 Creating DocumentFragment's using createDocumentFragment()
+    we can create it using createDocumentFragment
+#+BEGIN_SRC html :tangle createDocumentFragment.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<script>
+
+var docFrag = document.createDocumentFragment();
+
+["blue", "green", "red", "blue", "pink"].forEach(function(e) {
+    var li = document.createElement("li");
+    li.textContent = e;
+    docFrag.appendChild(li);
+});
+
+console.log(docFrag.textContent); //logs bluegreenredbluepink
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+advantage of document fragment over createElement()
+1. it can contain any kind of node except body and html
+2. the document fragment itself isnt added to the dom, only the contents of the node are
+3. after appending to  the dom, the document fragment is no more, so it is not copied to the dom rather it is moved to the dom
+if we want to copy we'd have to clone it 
+
+*** 8.3 Adding a DocumentFragment to the live DOM
+
+    #+BEGIN_SRC html :tangle Adding document fragment to live dom.html
+
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<ul></ul>
+
+<script>
+
+var ulElm = document.queryselector('ul');
+var docFrag = document.createDocumentFragment();
+
+["blue", "green", "red", "blue", "pink"].forEach(function(e) {
+    var li = document.createElement("li");
+    li.textContent = e;
+    docFrag.appendChild(li);
+});
+
+ulElm.appendChild(docFrag);
+
+//logs <ul><li>blue</li><li>green</li><li>red</li><li>blue</li><li>pink</li></ul>
+console.log(document.body.innerHTML);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 8.4 Using innerHTML on a documentFragment
+    creating a virtual dom in html can be difficult with normal methdos so another way of doing this is to use a docFrag
+append a div to this fragment (because innerHTML does not work on fragments) and then use the innerHTML property to update the fragment with a string of htmlcollection
+by doing this a html structure is crafted just from the html string;
+#+BEGIN_SRC html :tangle appending using docfrags.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<script>
+
+//create a <div> and document fragment
+var divElm = document.createElement('div');
+var docFrag = document.createDocumentFragment();
+
+//append div to document fragment
+docFrag.appendChild(divElm);
+
+//create a DOM structure from a string
+docFrag.querySelector('div').innerHTML = '<ul><li>foo</li><li>bar</li></ul>';
+
+//the string becomes a DOM structure I can call methods on like querySelectorAll()
+//Just don't forget the DOM structure is wrapped in a <div>
+console.log(docFrag.querySelectorAll('li').length); //logs 2
+
+</script>
+</body>
+</html>
+#+END_SRC
+if you want to skip the div you can do that very easily while appending 
+#+BEGIN_SRC html :tangle appending.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div></div>
+
+<script>
+
+//create a <div> and document fragment
+var divElm = document.createElement('div');
+var docFrag = document.createDocumentFragment();
+
+//append div to document fragment
+docFrag.appendChild(divElm);
+
+//create a DOM structure from a string
+docFrag.querySelector('div').innerHTML = '<ul><li>foo</li><li>bar</li></ul>';
+
+//append, starting with the first child node contained inside of the <div>
+document.querySelector('div').appendChild(docFrag.querySelector('div').firstChild);
+
+//logs <ul><li>foo</li><li>bar</li></ul>
+console.log(document.querySelector('div').innerHTML);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 8.5 Leaving a fragments containing nodes in memory by cloning
+When appending a documentFragment, the nodes inside it are transferred to the target structure.
+To preserve the contents of the fragment after appending, use cloneNode() to clone the documentFragment.
+In the provided code, the <li> elements are cloned instead of being moved, allowing them to remain in memory within the documentFragment node.
+
+#+BEGIN_SRC html :tangle cloning doc frags.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<ul></ul>
+
+<script>
+
+//create ul element and document fragment
+var ulElm = document.querySelector('ul');
+var docFrag = document.createDocumentFragment();
+
+//append li's to document fragment
+["blue", "green", "red", "blue", "pink"].forEach(function(e) {
+    var li = document.createElement("li");
+    li.textContent = e;
+    docFrag.appendChild(li);
+});
+
+//append cloned document fragment to ul in live DOM
+ulElm.appendChild(docFrag.cloneNode(true));
+
+//logs <li>blue</li><li>green</li><li>red</li><li>blue</li><li>pink</li>
+console.log(document.querySelector('ul').innerHTML);
+
+//logs [li,li,li,li,li] 
+console.log(docFrag.childNodes);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+
+
+** CSS stylesheet and css rules
+*** 9.1 CSS Style sheet overview
+    a stylesheet can be added either using the link tag or the style tag 
+we can see that in the example code below 
+#+BEGIN_SRC html :tangle stylesheet overview.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link id="linkElement" href="http://yui.yahooapis.com/3.3.0/build/cssreset/reset-min.css" rel="stylesheet" type="text/css">
+
+<style id="styleElement">
+body{background-color:#fff;}
+</style>
+
+</head>
+<body>
+
+<script>
+
+//logs function HTMLLinkElement() { [native code] }
+console.log(document.querySelector('#linkElement').constructor);
+
+//logs function HTMLStyleElement() { [native code] }
+console.log(document.querySelector('#styleElement').constructor);
+
+</script>
+</body>
+</html>
+#+END_SRC
+once a stylesheet is added, each rule inside it is represented by CSSStyleRule object
+#+BEGIN_SRC html :tangle stylesheet objects.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<style id="styleElement">
+body{background-color:#fff;}
+</style>
+
+</head>
+<body>
+
+<script>
+
+//logs function CSSStyleSheet() { [native code] } because this object is the stylesheet itself
+console.log(document.querySelector('#styleElement').sheet.constructor);
+
+//logs function CSSStyleRule() { [native code] } because this object is the rule inside of the style sheet
+console.log(document.querySelector('#styleElement').sheet.cssRules[0].constructor);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 9.2 Accessing all style sheets (i.e. CSSStylesheet objects) in the DOM
+    Accessing all the styleheets can be done by document.styleSheets 
+#+BEGIN_SRC html :tangle accessing_all_stylesheets.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link href="http://yui.yahooapis.com/3.3.0/build/cssreset/reset-min.css" rel="stylesheet" type="text/css">
+
+<style>
+body{background-color:red;}
+</style>
+
+</head>
+<body>
+
+<script>
+
+console.log(document.styleSheets.length); //logs 2
+console.log(document.styleSheets[0]); // the <link>
+console.log(document.styleSheets[1]); // the <style>
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+we can also gain access to the one in dom using the .sheet property
+#+BEGIN_SRC html :tangle sheet.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link id="linkElement" href="http://yui.yahooapis.com/3.3.0/build/cssreset/reset-min.css" rel="stylesheet" type="text/css">
+
+<style id="styleElement">
+body{background-color:#fff;}
+</style>
+
+</head>
+<body>
+
+<script>
+
+//get CSSStylesheeet object for <link>
+console.log(document.querySelector('#linkElement').sheet); //same as document.styleSheets[0] 
+
+//get CSSSstylesheet object for <style>
+console.log(document.querySelector('#styleElement').sheet); //same as document.styleSheets[1]
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+
+*** 9.3 CSSStyleSheet properties and methods
+    properties of css stylesheets are
+#+BEGIN_SRC html :tangle properties of css stylesheets.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<style id="styleElement">
+body{background-color:#fff;}
+</style>
+
+</head>
+<body>
+
+<script>
+
+var styleSheet = document.querySelector('#styleElement').sheet;
+
+//text own properties
+console.log(Object.keys(styleSheet).sort());
+
+//text own properties & inherited properties
+var styleSheetPropertiesIncludeInherited = [];
+for(var p in styleSheet){
+	styleSheetPropertiesIncludeInherited.push(p);
+}
+console.log(styleSheetPropertiesIncludeInherited.sort());
+
+//text inherited properties only
+var styleSheetPropertiesOnlyInherited = [];
+for(var p in styleSheet){
+	if(!styleSheet.hasOwnProperty(p)){
+		styleSheetPropertiesOnlyInherited.push(p);
+	}
+}
+console.log(styleSheetPropertiesOnlyInherited.sort());
+
+</script>
+</body>
+</html>
+#+END_SRC
+some important properties are 
+> disabled
+> href
+> media
+> ownerNode
+> parentStylesheet
+> title
+> type
+> cssRules
+> ownerRule
+> deleteRule
+> inserRule
+
+*** 9.4 CSSStyleRule overview
+a CSSStyleRule is an interface to css properties and values attached to a selector
+#+BEGIN_SRC html :tangle css style rules.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<style id="styleElement">
+body{background-color:#fff;margin:20px;} /*this is a css rule*/
+p{line-height:1.4em; color:blue;} /*this is a css rule*/
+</style>
+
+</head>
+<body>
+
+<script>
+
+var sSheet = document.querySelector('#styleElement');
+
+console.log(sSheet.cssRules[0].cssText); //logs "body { background-color: red; margin: 20px; }"
+console.log(sSheet.cssRules[1].cssText); //logs "p { line-height: 1.4em; color: blue; }"
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 9.5 CSSStyleRule properties and methods
+    some important properties and methods of css style rules are 
+
+> cssText
+> parentRule
+> parentStylesSheet
+> selectorText
+> style
+> type
+
+*** 9.6 Getting a list of CSS Rules in a style sheet using CSSRules
+    the code below logs the css rules in to console
+#+BEGIN_SRC html :tangle css rules logged.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<style id="styleElement">
+body{background-color:#fff;margin:20px;}
+p{line-height:1.4em; color:blue;}
+</style>
+
+</head>
+<body>
+
+<script>
+
+var sSheet = document.querySelector('#styleElement').sheet;
+
+//array like list containing all of the CSSrule objects repreesenting each CSS rule in the style sheet
+console.log(sSheet.cssRules);
+
+console.log(sSheet.cssRules.length); //logs 2
+
+//rules are index in a CSSRules list starting at a 0 index
+console.log(sSheet.cssRules[0]); //logs first rule
+console.log(sSheet.cssRules[1]); //logs second rule
+
+</script>
+</body>
+</html>
+
+#+END_SRC
+
+*** 9.7 Inserting & deleting CSS rules in a style sheet using .insertRule() and .deleteRule()
+    we can programmatically manipulate rules using insertRule and deleteRule
+
+    #+BEGIN_SRC html :tangle insertRule.html
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+
+<style id="styleElement">
+p{line-height:1.4em; color:blue;} /*index 0*/
+p{font-size:50px;} /*index 1*/
+</style>
+
+</head>
+<body>
+
+<p>Hi</p>
+
+<script>
+
+//add a new CSS rule at index 1 in the inline style sheet
+document.querySelector('#styleElement').sheet.insertRule('p{color:red}',1);
+
+//verify it was added
+console.log(document.querySelector('#styleElement').sheet.cssRules[1].cssText);
+
+//Delete what we just added
+document.querySelector('#styleElement').sheet.deleteRule(1);
+
+//verify it was removed
+console.log(document.querySelector('#styleElement').sheet.cssRules[1].cssText);
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 9.8 Editing the value of a CSSStyleRule using the .style property
+    we can use .style property to manipulate rules like this 
+#+BEGIN_SRC html :tangle manipulating css style rules.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<style id="styleElement">
+p{color:blue;}
+strong{color:green;}
+</style>
+
+</head>
+<body>
+
+<p>Hey <strong>Dude!</strong></p>
+
+<script>
+
+var styleSheet = document.querySelector('#styleElement').sheet;
+
+//Set css rules in stylesheet
+styleSheet.cssRules[0].style.color = 'red';
+styleSheet.cssRules[1].style.color = 'purple';
+
+//Get css rules
+console.log(styleSheet.cssRules[0].style.color); //logs 'red'
+console.log(styleSheet.cssRules[1].style.color); //logs 'purple'
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 9.9 Creating a new inline CSS style sheets
+    to create a stylesheet on the fly, one has to create a style node, add css rules using innerHTML and append the style to html document
+   #+BEGIN_SRC html :tangle creating new inline css style sheets.html
+<!DOCTYPE html>
+<html lang="en">
+<head></head>
+<body>
+
+<p>Hey <strong>Dude!</strong></p>
+
+<script>
+
+var styleElm = document.createElement('style');
+styleElm.innerHTML = 'body{color:red}';
+
+//notice markup in the document changed to red from our new inline stylesheet
+document.querySelector('head').appendChild(styleElm);
+
+</script>
+</body>
+</html>
+#+END_SRC
+ 
+*** 9.10 Programatically adding external style sheets to an HTML document
+    #+BEGIN_SRC html :tangle adding external sheet programmtatically.html
+<!DOCTYPE html>
+<html lang="en">
+<head></head>
+<body>
+
+<script>
+
+//create & add attributes to <link>
+var linkElm = document.createElement('link');
+linkElm.setAttribute('rel', 'stylesheet');
+linkElm.setAttribute('type', 'text/css');
+linkElm.setAttribute('id', 'linkElement');
+linkElm.setAttribute('href', 'http://yui.yahooapis.com/3.3.0/build/cssreset/reset-min.css');
+
+//Append to the DOM
+document.head.appendChild(linkElm);
+
+//confrim its addition to the DOM
+console.log(document.querySelector('#linkElement'));
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+*** 9.11 Disabling/Enabling style sheets using disabled property
+    we can use the .disabled property to enable or disable styleSheets
+#+BEGIN_SRC html :tangle enablingxdisabling.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link id="linkElement" href="http://yui.yahooapis.com/3.3.0/build/cssreset/reset-min.css" rel="stylesheet" type="text/css">
+
+<style id="styleElement">
+body{color:red;}
+</style>
+
+</head>
+<body>
+
+<script>
+
+//Get current boolean disabled value
+console.log(document.querySelector('#linkElement').disabled); //log 'false'
+console.log(document.querySelector('#styleElement').disabled); //log 'false'
+
+//Set disabled value, which of courese disabled all styles for this document
+document.document.querySelector('#linkElement').disabled = true;
+document.document.querySelector('#styleElement').disabled = true;
+
+</script>
+</body>
+</html>
+#+END_SRC
+
+** Javascript in the dom 
+*** 10.1 Inserting & executing JavaScript overview
+    it is more or less same as inserting css we need to add script node 
+#+BEGIN_SRC html :tangle Insertingjs.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<!-- external, cross domain JavaScript include -->
+<script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.3.3/underscore-min.js"></script>
+
+<!-- page inline JavaScript -->
+<script>
+console.log('hi');
+</script>
+
+</body>
+</html>
+
+#+END_SRC
+Its possible to insert and execute JavaScript in the DOM by placing JavaScript in an element attribute event handler (i.e. <div onclick="alert('yo')"></div>) and using the javascript: protocal (e.g. <a href="javascript:alert('yo')"></a>) but this is no longer considered a modern practice.
+
+Trying to include an external JavaScript file and writing page inline JavaScript using the same <script> element will result in the page inline JavaScript being ignored and the exterenal JavaScript file being downloaded and exectued
+
+Self-closing scripts tags (i.e. <script src="" /> ) should be avoid unless you are rocking some old school XHTML
+
+The <script> element does not have any required attributes but offers the follow optional attribures: async, charset, defer, src, and type
+
+Page inline JavaScript produces a text node. Which permits the usage of innerHTML and textContent to retrieve the contents of a line <script>. However, appending a new text node made up of JavaScript code to the DOM after the browser has already parsed the DOM will not execute the new JavaScript code. It simply replaces the text.
+
+If JavaScript code contains the string '</script>' you will have to escape the closing '/' with '<\/script>' so that the parser does not think this is the real closing </script> element
+
+
+*** 10.2 JavaScript is parsed synchronously by default
+parsing js is not asynchronous and it show blocking behaviour by default 
+
+*** 10.3 Defering the downloading & exectuion of external JavaScript using defer
+    we can defer js execution using defer
+
+*** 10.4 Asynchronously downloading & executing external JavaScript files using async
+    we can enable async behaviour in js but there might be a dependency problem 
+
+*** 10.5 Forcing asynchronous downloading & parsing of external JavaScript using dynamic <script>
+    A known hack for forcing a web browser into asynchronous JavaScript downloading and parsing without using the async attribure is to programatically create <script> elements that include external JavaScript files and insert them in the DOM. 
+
+*** 10.6 Using the onload call back for asynchronous <script>'s so we know when its loaded
+The <script> element supports a load event handler (ie. onload) that will execute once an external JavaScript file has been loaded and executed. 
+example
+#+BEGIN_SRC html :tangle async callbakc.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<!-- Don't block, just start downloading and then parse the file when it's done downloading -->
+<script>
+var underscoreScript = document.createElement("script"); 
+underscoreScript.src = "http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.3.3/underscore-min.js";
+underscoreScript.onload = function(){console.log('underscsore is loaded and exectuted');};
+document.body.appendChild(underscoreScript);
+</script>
+
+<!-- Don't block, just start downloading and then parse the file when it's done downloading -->
+<script async src="http://cdnjs.cloudflare.com/ajax/libs/jquery/1.7.2/jquery.min.js" onload="console.log('jQuery is loaded and exectuted');"></script>
+
+</body>
+</html>
+#+END_SRC
+
+
+*** 10.7 Be mindful of <script> 's placement in HTML for DOM manipulation
+    script should be loaded after everything has been loaded
+
+    
+*** 10.8 Getting a list of <script>'s in the DOM
+The document.scripts property avaliable from the document object provides a list (i.e. an HTMLCollection) of all of the scripts currently in the DOM. In the code below I leverage this property to gain access to each of the <script> elements src attributes.
+
+#+BEGIN_SRC html :tangle list of scripts.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.3.3/underscore-min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.0.6/jquery.mousewheel.min.js"></script>
+
+<script>​
+Array.prototype.slice.call(document.scripts).forEach(function(elm){
+	console.log(elm); 
+});//will log each script element in the document
+</script> 
+
+</body>
+</html>
+#+END_SRC
+
+** Dom events
+*** 11.1 DOM events overview
+> An event in the DOM refers to a specific moment in time related to an element, the document, or the window.
+> Events can be pre-defined or custom moments that trigger functionality when they occur.
+> Functionality associated with events is typically programmed by adding handlers or callbacks.
+> Events can be initiated by UI states (e.g., focus on an input or drag action), environment states (e.g., page load or completion of an XHR request), or program states (e.g., monitoring user interaction after page load).
+> There are three common patterns for setting up events:
+> Inline attribute event handlers: Handlers are defined directly in the HTML attributes of the element.
+> Property event handlers: Handlers are assigned to the corresponding properties of the element.
+> addEventListener() method: Handlers are added using this method, allowing for multiple handlers and more flexibility.
+> The provided code demonstrates these three patterns by adding a click event to a <div> element, triggering the associated functionality when the <div> is clicked by the mouse.
+#+BEGIN_SRC html :tangle dom events.html
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- inline attribure event handler pattern -->
+<body onclick="console.log('fire/trigger attribure event handler')">
+
+<div>click me</div>
+
+<script>
+var elementDiv = document.querySelector('div');
+
+// property event handler pattern
+elementDiv.onclick = function(){console.log('fire/trigger property event handler')};
+
+//addEventListener method pattern
+elementDiv.addEventListener('click',function(){console.log('fire/trigger addEventListener')}, false);
+</script> 
+</body>
+</html>
+#+END_SRC
+
+In the provided code, one event is attached to the <body> element.
+Clicking the <div> element triggers the attribute event handler on the <body> element because clicking the <div> also means clicking on the <body>.
+The attribute event handler on the <body> element fires when clicking anywhere except the <div>.
+Regarding the three patterns for attaching events:
+
+addEventListener() provides a robust and organized solution for attaching events programmatically.
+Inline attribute event handlers mix JavaScript and HTML, but it's best practice to separate them for clarity and maintainability.
+Property event handlers have a limitation: Only one value can be assigned to the event property at a time. Adding multiple property event handlers to a DOM node is not possible. In the given code, the example assigns a value to the onclick property twice, and the last value set is used when the event is triggered.
+#+BEGIN_SRC html :tangle addEventListener.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>click me</div>
+
+<script>
+var elementDiv = document.querySelector('div');
+
+// property event handler 
+elementDiv.onclick = function(){console.log('I\'m first, but I get overidden/replace')};
+
+//overrides/replaces the prior value
+elementDiv.onclick = function(){console.log('I win')};
+
+</script> 
+</body>
+</html>
+
+#+END_SRC
+
+*** 11.2 DOM event types
+
+lol there are too many of them - let us see them as we go 
+
+
+*** 11.3 The event flow
+
+When an event is triggered, it propagates through the DOM, firing the same event on other nodes and JavaScript objects.
+The event flow can occur in two phases: the capture phase (from the DOM tree's trunk to its branches) and the bubbling phase (from the DOM tree's branches to its trunk), or both.
+In the provided code, ten event listeners are set up to be invoked by a single click on the <div> element in the HTML document, due to the event flow.
+When the <div> is clicked, the capture phase begins at the window object and propagates down the DOM tree, firing the click event for each object (window > document > <html> > <body> > event target) until it reaches the event target.
+After the capture phase ends, the target phase starts, firing the click event on the target element itself.
+Next, the propagation phase occurs, propagating up from the event target and firing the click event on each subsequent element until it reaches the window object (event target > <body> > <html> > document > window).
+Based on this event flow, clicking the <div> in the code example logs to the console the numbers 1, 2, 3, 4, 5, 6, 7, 8, 9, and 11.
+#+BEGIN_SRC html :tangle enter.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>click me to start event flow</div>
+
+<script>
+
+/*notice that I am passing the addEventListener() a boolean parameter of true so capture events fire, not just bubbling events*/
+
+//1 capture phase
+window.addEventListener('click',function(){console.log(1);},true);
+
+//2 capture phase
+document.addEventListener('click',function(){console.log(2);},true);
+
+//3 capture phase
+document.documentElement.addEventListener('click',function(){console.log(3);},true);
+
+//4 capture phase
+document.body.addEventListener('click',function(){console.log(4);},true);
+
+//5 target phase occurs during capture phase
+document.querySelector('div').addEventListener('click',function(){console.log(5);},true);
+
+//6 target phase occurs during bubbling phase
+document.querySelector('div').addEventListener('click',function(){console.log(6);},false);
+
+//7 bubbling phase
+document.body.addEventListener('click',function(){console.log(7);},false);
+
+//8 bubbling phase
+document.documentElement.addEventListener('click',function(){console.log(8);},false);
+
+//9 bubbling phase
+document.addEventListener('click',function(){console.log(9);},false);
+
+//10 bubbling phase
+window.addEventListener('click',function(){console.log(10)},false);
+
+</script> 
+</body>
+</html>
+
+#+END_SRC
+
+After the <div> is clicked, the event flow proceeds in this order:
+
+capture phase invokes click events on window that are set to fire on capture
+capture phase invokes click events on document that are set to fire on capture
+capture phase invokes click events on html element that are set to fire on capture
+capture phase invokes click events on body element that are set to fire on capture
+target phase invokes click events on div element that are set to fire on capture
+target phase invokes click events on div element that are set to fire on bubble
+bubbling phase invokes click events on body element are set to fire on bubble
+bubbling phase invokes click events on html element are set to fire on bubble
+bubbling phase invokes click events on document are set to fire on bubble
+bubbling phase invokes click events on window are set to fire on bubble
+
+
+*** 11.4 Adding event listeners to Element nodes, window object, and Document object
+The addEventListener() method is available on all Element nodes, the window object, and the document object.
+It allows adding event listeners to specific parts of an HTML document and JavaScript objects related to the DOM and BOM (browser object model).
+In the provided code, the addEventListener() method is used to add a mousemove event to a <div> element, the document object, and the window object.
+Due to the event flow, when there is mouse movement specifically over the <div>, all three listeners are invoked each time a movement occurs.
+
+    #+BEGIN_SRC html :tangle adding event listerneres to element nodes etc.html
+    <!DOCTYPE html>
+<html lang="en">
+
+<body>
+
+<div>mouse over me</div>
+
+<script>
+
+//add a mousemove event to the window object, invoking the event during the bubbling phase
+window.addEventListener('mousemove',function(){console.log('moving over window');},false);
+
+//add a mousemove event to the document object, invoking the event during the bubbling phase
+document.addEventListener('mousemove',function(){console.log('moving over document');},false);
+
+//add a mousemove event to a <div> element object, invoking the event during the bubbling phase
+document.querySelector('div').addEventListener('mousemove',function(){console.log('moving over div');},false);
+
+</script> 
+</body>
+</html>
+#+END_SRC
+
+The addEventListener() method used in the provided code example takes three arguments.
+The first argument is the type of event to listen for. It is important to note that the event type string does not include the "on" prefix that event handlers require. For example, instead of onmousemove, you would use mousemove.
+The second argument is the function that will be invoked when the event occurs. This function defines the desired functionality to be executed when the event is triggered.
+The third parameter is a boolean value indicating whether the event should be fired during the capture phase (true) or the bubbling phase (false) of the event flow. This parameter is optional, and if omitted, the default value is false, representing the bubbling phase.
+
+*** 11.5 Removing event listeners
+The removeEventListener() method can be used to remove events listeners, if the orginal listener was not added using an anonymous function
+#+BEGIN_SRC html :tangle removing event listeners.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>click to say hi</div>
+
+<script>
+
+var sayHi = function(){console.log('hi')};
+
+//adding event listener using anonymous function
+document.body.addEventListener('click',function(){console.log('dude');},false);
+
+//adding event listener using function reference
+document.querySelector('div').addEventListener('click',sayHi,false);
+
+//attempt to remove both event listeners, but only the listener added with a funtions reference is removed
+document.querySelector('div').removeEventListener('click',sayHi,false);
+
+//this of course does not work as the function passed to removeEventListener is a new and different function
+document.body.removeEventListener('click',function(){console.log('dude');},false);
+
+//clicking the div will still invoke the click event attached to the body element, this event was not removed
+
+</script> 
+</body>
+</html>
+
+#+END_SRC
+Anonymous functions added using addEventListener() method simply cannot be removed.
+
+
+
+*** 11.6 Getting event properties from the event object
+
+The handler or callback function for events receives a parameter by default, which contains all the important information about the event. This parameter gives details like the event type, the element it occurred on, mouse coordinates, keyboard keys, and other relevant data. It allows the handler function to access and use this information to respond or perform specific actions based on the event that took place.
+
+#+BEGIN_SRC html :tangle events properties.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>click me</div>
+
+<script>
+
+document.querySelector('div').addEventListener('click',function(event){
+Object.keys(event).sort().forEach(function(item){
+     console.log(item+' = '+event[item]); //logs event propeties and values
+});     
+},false);
+
+//assumes 'this' is window
+this.addEventListener('load',function(event){
+Object.keys(event).sort().forEach(function(item){
+     console.log(item+' = '+event[item]); //logs event propeties and values
+});     
+},false);
+
+</script> 
+</body>
+</html>
+#+END_SRC
+
+
+
+
+*** 11.7 The value of this when using addEventListener()
+    the value of this when when you define an event listener function and pass it to the addEventListener() method, the this value inside that function will refer to the node or object to which the event is attached. It allows you to easily access and work with the element or object that triggered the event within the listener function.
+
+#+BEGIN_SRC html :tangle value of this.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>click me</div>
+
+<script>
+
+document.querySelector('div').addEventListener('click',function(){
+// 'this' will be the element or node the event listener is attached too
+console.log(this); //logs '<div>' 
+},false);
+
+</script> 
+</body>
+</html>
+#+END_SRC
+
+, when events are triggered and flow through the event handling process, the this value inside the event listener function will always refer to the node or object to which the listener is attached. In the provided code, a click event listener is added to the <body>. Regardless of whether you click on the <div> or the <body>, the this value inside the listener function will always point to the <body> element.
+
+#+BEGIN_SRC html :tangle event handling.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>click me</div>
+
+<script>
+
+//click on the <div> or the <body> the value of this remains the <body> element node
+document.body.addEventListener('click',function(){
+console.log(this); //log <body>...</body>
+},false);
+
+</script> 
+</body>
+</html>
+#+END_SRC
+
+you can use the event.currentTarget property to get the same reference to the node or object that triggered the event listener, just like using the this keyword. In the provided code, the event.currentTarget property is used to demonstrate that it returns the same value as this.
+#+BEGIN_SRC html :tangle event.currentTarget.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>click me</div>
+
+<script>
+
+document.addEventListener('click',function(event){
+console.log(event.currentTarget);  //logs '#document'
+//same as...
+console.log(this);
+},false);
+
+document.body.addEventListener('click',function(event){
+console.log(event.currentTarget); //logs '<body>'
+//same as...
+console.log(this);
+},false);
+
+document.querySelector('div').addEventListener('click',function(event){
+console.log(event.currentTarget); //logs '<div>'
+//same as...
+console.log(this);
+},false);
+
+</script> 
+</body>
+</html>
+#+END_SRC
+
+
+*** 11.8 Referencing the target of an event and not the node or object the event is invoked on
+    When an event is triggered, it can travel through different elements within the document. This means that even if you click on a <div> element that is inside a <body> element, an event listener attached to the <body> element can still be triggered. In this situation, the event object passed to the listener function contains a property called event.target, which refers to the specific element that originally triggered the event (in this case, the <div>).
+
+In the provided code, when you click on the <div>, the click event listener attached to the <body> element is invoked. The event object received by this listener function has an event.target property that references the original <div> element that was clicked. This event.target property is very useful when you need information about the specific element that caused the event, especially in cases where events propagate through different elements due to the event flow.
+#+BEGIN_SRC html :tangle referencing .html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>click me</div>
+
+<script>
+
+document.body.addEventListener('click',function(event){
+//when the <div> is clicked logs '<div>' because the <div> was the target in the event flow
+console.log(event.target); 
+},false);
+
+</script> 
+</body>
+</html>
+#+END_SRC
+In simpler terms, let's say we have some code. If you click on the <body> element instead of the <div>, the event target (the element that triggered the event) and the element node where the event listener is attached will be the same, which is the <body> element. So, in this case, event.target, this, and event.currentTarget will all refer to the <body> element.
+
+
+
+*** 11.9 Cancelling default browser events using preventDefault()
+for this we can just use the preventDefault  method
+
+#+BEGIN_SRC html :tangle stopping.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<a href="google.com">no go</div>
+
+<input type="checkbox" />
+
+<textarea></textarea>
+
+<script>
+
+document.querySelector('a').addEventListener('click',function(event){
+event.preventDefault(); //stop the default event for <a> which would be to load a url
+},false);
+
+document.querySelector('input').addEventListener('click',function(event){
+event.preventDefault(); //stop default event for checkbox, which would be to toggle checkbox state
+},false);
+
+document.querySelector('textarea').addEventListener('keypress',function(event){
+event.preventDefault(); //stop default event for textarea, which would be to add characters typed
+},false);
+
+/*keep in mind that events still propagate, clicking the link in this html document will stop the default event but not event bubbling*/
+document.body.addEventListener('click',function(){
+console.log('the event flow still flows!');
+},false);
+
+</script> 
+</body>
+</html>
+#+END_SRC
+
+
+*** 11.10 Stoping the event flow using stopPropagation()
+we can stop the capture and bubble event flow phases using stopPropagation
+other click events will still get invoked
+
+#+BEGIN_SRC html :tangle stopping the flow.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>click me</div>
+
+<script>
+
+document.querySelector('div').addEventListener('click',function(){
+console.log('me too, but nothing from the event flow!');
+},false);
+
+document.querySelector('div').addEventListener('click',function(event){
+console.log('invoked all click events attached, but cancel capture and bubble event phases');
+event.stopPropagation();
+},false);
+
+document.querySelector('div').addEventListener('click',function(){
+console.log('me too, but nothing from the event flow!');
+},false);
+
+/*when the <div> is clicked this event is not invoked because one of the events attached to the <div> stops the capture and bubble flow.*/
+document.body.addEventListener('click',function(){
+console.log('What, denied from being invoked!');
+},false);
+
+</script> 
+</body>
+</html>
+#+END_SRC
+
+#+BEGIN_SRC html :tangle .html
+#+END_SRC
+*** 11.11 Stoping the event flow as well as other like events on the same target using stopImmediatePropagation()
+Calling the stopImmediatePropagation() method within an event handler/listener will halt the event flow phases, including the stopPropagation() method.
+It will also prevent any other similar events attached to the event target from being triggered if they were added after the event listener that called stopImmediatePropagation().
+In the provided code example, if we invoke stopImmediatePropagation() from the second event listener attached to the <div>, the subsequent click event will not be triggered.
+
+#+BEGIN_SRC html :tangle stopping propagation.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>click me</div>
+
+<script>
+
+//first event attached
+document.querySelector('div').addEventListener('click',function(){
+console.log('I get invoked because I was attached first');
+},false);
+
+//seond event attached
+document.querySelector('div').addEventListener('click',function(event){
+console.log('I get invoked, but stop any other click events on this target');
+event.stopImmediatePropagation();
+},false);
+
+//third event attached, but because stopImmediatePropagation() was called above this event does not get invoked
+document.querySelector('div').addEventListener('click',function(){
+console.log('I get stopped from the previous click event listener');
+},false);
+
+//notice that the event flow is also cancelled as if stopPropagation was called too
+document.body.addEventListener('click',function(){
+console.log('What, denied from being invoked!');
+},false);
+
+</script> 
+</body>
+</html>
+#+END_SRC
+
+*** 11.12 Custom events
+it is possible to add a custom event using addEventListener
+#+BEGIN_SRC html :tangle custom events.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>click me</div>​​​​​
+
+<script>
+
+var divElement = document.querySelector('div');
+
+//create the custom event
+var cheer = document.createEvent('CustomEvent'); //the 'CustomEvent' parameter is required
+
+//create an event listener for the custom event
+divElement.addEventListener('goBigBlue',function(event){
+    console.log(event.detail.goBigBlueIs)
+},false);
+
+/*Use the initCustomEvent method to setup the details of the custom event.
+Parameters for initCustomEvent are: (event, bubble?, cancelable?, pass values to event.detail)*/
+cheer.initCustomEvent('goBigBlue',true,false,{goBigBlueIs:'its gone!'});
+    
+//invoke the custom event using dispatchEvent
+divElement.dispatchEvent(cheer);​
+
+</script> 
+</body>
+</html>
+#+END_SRC
+
+*** 11.13 Simulating/Triggering mouse events
+Simulating an event is similar to creating a custom event.
+To simulate a mouse event, we use the document.createEvent() method to create a 'MouseEvent' object.
+Next, we set up the mouse event using the initMouseEvent() method, specifying the details of the event.
+Then, we dispatch or trigger the mouse event on the element where we want to simulate the event (e.g., the <div> in the HTML document).
+In the provided code, a click event is attached to the <div>. Instead of physically clicking on the <div> to invoke the click event, the event is programmatically triggered or simulated by setting up a mouse event and dispatching it to the <div>.
+
+#+BEGIN_SRC html :tangle simulating events.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div>no need to click, we programatically trigger it</div>​​​​
+
+<script>
+
+var divElement = document.querySelector('div');
+
+//setup click event that will be simulated
+divElement.addEventListener('click',function(event){
+    console.log(Object.keys(event));
+},false);
+
+//create simulated mouse event 'click'
+var simulateDivClick = document.createEvent('MouseEvents');
+
+/*setup simulated mouse 'click'
+initMouseEvent(type,bubbles,cancelable,view,detail,screenx,screeny,clientx,clienty,ctrlKey,altKey,shiftKey,metaKey,button,relatedTarget)*
+simulateDivClick.initMouseEvent('click',true,true,document.defaultView,0,0,0,0,0,false,false,false,0,null,null);
+
+//invoke simulated clicked event
+divElement.dispatchEvent(simulateDivClick);
+
+</script> 
+</body>
+</html>
+
+#+END_SRC
+*** 11.14 Event delegation
+Event delegation is a technique where we use the event flow and a single event listener to handle events for multiple event targets.
+With event delegation, the event targets don't have to be present in the DOM at the time the event is created in order for them to respond to the event.
+This is particularly useful when dealing with dynamic content updates, such as those caused by XHR responses that modify the DOM.
+By implementing event delegation, newly added content to the DOM after the JavaScript is loaded can immediately start responding to events.
+Let's consider an example of a table with an unlimited number of rows and columns. By applying event delegation, we can add a single event listener to the <table> element, which acts as a delegate for the actual target of the event (e.g., <td> elements).
+In the provided code example, clicking on any <td> (the target) will delegate the event to the click listener on the <table> element.
+This is possible due to the event flow, specifically the bubbling phase, where events propagate up from the target to its ancestors.
+#+BEGIN_SRC html :tangle event delegation.html
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<p>Click a table cell</p>
+
+<table border="1">
+    <tbody>
+        <tr><td>row 1 column 1</td><td>row 1 column 2</td></tr>
+        <tr><td>row 2 column 1</td><td>row 2 column 2</td></tr>
+        <tr><td>row 3 column 1</td><td>row 3 column 2</td></tr>
+        <tr><td>row 4 column 1</td><td>row 4 column 2</td></tr>
+        <tr><td>row 5 column 1</td><td>row 5 column 2</td></tr>
+        <tr><td>row 6 column 1</td><td>row 6 column 2</td></tr>
+    </tbody>
+</table>​​​​​​​​
+
+<script>
+
+document.querySelector('table').addEventListener('click',function(event){
+	if(event.target.tagName.toLowerCase() === 'td'){ //make sure we only run code if a td is the target
+		console.log(event.target.textContent); //use event.target to gain access to target of the event which is the td 
+	}      
+},false);
+
+</script> 
+</body>
+</html>
+#+END_SRC

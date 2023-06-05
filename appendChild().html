@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<p>Hi</p>
+
+<script>
+
+//create a blink element node and text node
+var elementNode = document.createElement('strong');
+var textNode = document.createTextNode(' Dude');
+
+
+//append these nodes to the DOM
+document.querySelector('p').appendChild(elementNode);
+document.querySelector('p').appendChild(elementNode);
+
+//log's <p>Hi<strong> Dude</strong></p>
+console.log(document.body.innerHTML);
+
+
+</script>
+</body>
+</html>
